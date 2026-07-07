@@ -1,0 +1,117 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-plex-thai);
+  --font-heading: var(--font-anuphan);
+  --font-num: var(--font-plex-sans);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-primary-dk: var(--primary-dk);
+  --color-accent-gold: var(--accent-gold);
+  --color-accent-gold-foreground: var(--accent-gold-foreground);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+/*
+ * Design tokens — CLAUDE.md §3 โทน "ท้องนายามเช้า"
+ * --accent-gold (ทองข้าวเปลือก) แยกจาก --accent ของ shadcn
+ * (--accent ใช้เป็นสี hover อ่อนของ dropdown/menu ห้ามเป็นสีจัด)
+ */
+:root {
+  --background: #f7f8f4; /* ขาวนวลอมเขียว — พื้นหลังหลัก */
+  --foreground: #22301f; /* เขียวชาโคล — ตัวหนังสือหลัก */
+  --card: #ffffff;
+  --card-foreground: #22301f;
+  --popover: #ffffff;
+  --popover-foreground: #22301f;
+  --primary: #1e7a46; /* เขียวใบข้าว — ปุ่มหลัก, ลิงก์ */
+  --primary-foreground: #ffffff;
+  --primary-dk: #14522f; /* เขียวเข้ม — hover, header text */
+  --secondary: #e8eee4;
+  --secondary-foreground: #14522f;
+  --muted: #edf0ea;
+  --muted-foreground: #6b7a64; /* ตัวหนังสือรอง, ป้ายกำกับ */
+  --accent: #e8eee4;
+  --accent-foreground: #14522f;
+  --accent-gold: #e8a317; /* ทองข้าวเปลือก — ป้ายราคา, ประกาศเด่น */
+  --accent-gold-foreground: #4a3403;
+  --destructive: #c0392b; /* ลบ, รายงานประกาศ */
+  --border: #dde3d8;
+  --input: #dde3d8;
+  --ring: #1e7a46;
+  --chart-1: #1e7a46;
+  --chart-2: #e8a317;
+  --chart-3: #6b7a64;
+  --chart-4: #14522f;
+  --chart-5: #c0392b;
+  --radius: 0.625rem;
+  --sidebar: #ffffff;
+  --sidebar-foreground: #22301f;
+  --sidebar-primary: #1e7a46;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #e8eee4;
+  --sidebar-accent-foreground: #14522f;
+  --sidebar-border: #dde3d8;
+  --sidebar-ring: #1e7a46;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+    /* ผู้ใช้หลักคือเกษตรกรบนมือถือ — body ≥ 16px */
+    font-size: 1rem;
+  }
+  html {
+    @apply font-sans;
+  }
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-heading font-semibold;
+  }
+}
