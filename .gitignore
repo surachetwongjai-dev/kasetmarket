@@ -43,3 +43,6 @@ next-env.d.ts
 
 # ShopDash reference project (not part of this repo, contains its own .env)
 /_shopdash-reuse/
+
+# local image uploads (dev fallback ก่อนตั้ง R2 — M4)
+.uploads/

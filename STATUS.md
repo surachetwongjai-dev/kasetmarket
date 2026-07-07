@@ -2,8 +2,40 @@
 
 > อัปเดตหลังจบทุก milestone — session ใหม่อ่านไฟล์นี้คู่กับ CLAUDE.md + PLAN.md
 
-- **Milestone ปัจจุบัน:** M3 เสร็จแล้ว ✅ — พร้อมเริ่ม M4 (Image upload: Cloudflare R2)
+- **Milestone ปัจจุบัน:** M4 เสร็จแล้ว ✅ (รันบน local driver — รอ R2 credentials) — พร้อมเริ่ม M5 (ลงประกาศ + จัดการประกาศ)
 - **อัปเดตล่าสุด:** 2026-07-07
+
+---
+
+## M4: Image upload ✅ (2026-07-07) — local driver ไปก่อน, R2 พร้อมเสียบ
+
+### สิ่งที่ทำ
+
+- **Storage layer สลับ driver อัตโนมัติ** (`src/lib/storage.ts`): ถ้า `.env` มี R2 ครบ 5 ค่า → presigned URL ไป Cloudflare R2 (aws4fetch, S3 SigV4) / ถ้าไม่มี → **local driver** เก็บลง `.uploads/` (gitignored) — flow ฝั่ง client เหมือนกันทุกประการ ใส่ R2 credentials เมื่อไหร่ก็สลับเองไม่ต้องแก้โค้ด
+- API: `POST /api/upload` (ต้องล็อกอิน, zod validate: webp/jpeg/png ≤5MB) → คืน `{uploadUrl, publicUrl, key}` · `PUT /api/upload/local` (ตรวจ HMAC token + expiry เลียนแบบ presigned, กัน path traversal) · `GET /api/uploads/[...path]` เสิร์ฟรูป local
+- **Client-side compress** (`src/lib/image-compress.ts`): max 1600px, webp q0.8 (fallback jpeg), หมุนตาม EXIF อัตโนมัติ
+- **`<ImageUploader>`** (`features/listings/components/`): สูงสุด 6 รูป, progress bar ต่อรูป, ลบ, เรียงลำดับ (ลาก + ปุ่มลูกศรสำหรับมือถือ), badge "รูปปก" ที่รูปแรก, `onChange` ส่ง `{key, url}[]` — พร้อมเสียบฟอร์มลงประกาศ M5
+- `next.config.ts`: อนุญาต `*.r2.dev` + โฮสต์จาก `R2_PUBLIC_BASE_URL` + picsum (seed)
+- หน้า `/dashboard/upload-demo` (ชั่วคราว — ลบตอน M5 เมื่อฟอร์มจริงมาแทน)
+
+### ทดสอบแล้ว (E2E บน browser จริง, local driver)
+
+- [x] รูป jpeg 1.3MB (2400×1800) → บีบเหลือ **164-180KB webp** (เกณฑ์ <500KB ผ่านขาด)
+- [x] อัป 2 รูปพร้อมกัน → เห็น URL + thumbnail + ไฟล์ลงดิสก์จริง, GET กลับมาเป็น image/webp + immutable cache
+- [x] เรียงลำดับ / ลบ / badge รูปปก ทำงานถูก
+- [x] Security: POST ไม่ล็อกอิน → 401, PUT token ปลอม → 403, path traversal → 404
+- [x] `npm run build` ผ่าน
+- [ ] **ยังไม่ได้ทดสอบกับ R2 จริง + มือถือจริง 6 รูป** — รอ credentials (ดู Next step)
+
+### ติดอะไร / บทเรียน
+
+- **ห้ามรัน `npm run build` ขณะ dev server เปิดอยู่** — ทั้งคู่เขียน `.next/` ทับกัน dev server พัง (ต้อง restart) เจอแล้วครั้งหนึ่ง
+- `next.config.ts` แก้แล้วต้อง restart dev server เสมอ (ไม่ hot-reload)
+
+### Next step (M5 — ลงประกาศ + จัดการประกาศ) + งานผู้ใช้
+
+- **งานของคุณ (เมื่อกลับจากเดินทาง):** (1) ทดสอบ LINE/Google login บน port 3000 (ค้างจาก M3) (2) สมัคร Cloudflare R2 → สร้าง bucket → เปิด public access (r2.dev หรือ custom domain) → ใส่ 5 ค่าใน `.env` ตามคอมเมนต์ใน `.env.sample` → ลองอัปรูปจากมือถือจริง 6 รูปที่ `/dashboard/upload-demo`
+- M5 เริ่มได้เลยไม่ต้องรอ R2: ฟอร์มลงประกาศ (zod + Server Action), แก้ไข/SOLD/ต่ออายุ/ลบ, กติกา verified→ACTIVE / ไม่ verified→PENDING, rate limit 5 ประกาศ/วัน
 
 ---
 
