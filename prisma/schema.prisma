@@ -25,17 +25,41 @@ enum ListingStatus {
 }
 
 model User {
-  id         String    @id @default(cuid())
-  role       Role      @default(SELLER)
-  name       String
-  phone      String?   @unique
-  lineUserId String?   @unique
-  avatarUrl  String?
-  province   String?
-  verified   Boolean   @default(false) // แอดมินยืนยันตัวตนแล้ว → ประกาศใหม่ขึ้น ACTIVE ทันที
-  createdAt  DateTime  @default(now())
-  listings   Listing[]
-  reports    Report[]
+  id            String    @id @default(cuid())
+  role          Role      @default(SELLER)
+  name          String
+  email         String?   @unique // ล็อกอิน email/รหัสผ่าน + Google (M3)
+  emailVerified DateTime? // Auth.js adapter ต้องการ
+  passwordHash  String? // เฉพาะผู้ใช้ที่สมัครด้วย email/รหัสผ่าน
+  phone         String?   @unique
+  lineUserId    String?   @unique
+  image         String? // avatar (ชื่อ field ตาม Auth.js adapter — เดิมคือ avatarUrl)
+  province      String?
+  verified      Boolean   @default(false) // แอดมินยืนยันตัวตนแล้ว → ประกาศใหม่ขึ้น ACTIVE ทันที
+  createdAt     DateTime  @default(now())
+  accounts      Account[]
+  listings      Listing[]
+  reports       Report[]
+}
+
+// OAuth account linking (Auth.js Prisma adapter) — LINE / Google
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
 }
 
 model Listing {

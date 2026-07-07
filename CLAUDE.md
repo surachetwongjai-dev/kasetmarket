@@ -31,7 +31,7 @@
 | Framework | Next.js 15 (App Router) + TypeScript | ISR สำหรับบทความ/ประกาศ, SEO, Server Components |
 | Database | PostgreSQL + Prisma | คุ้นเคยอยู่แล้ว, migration ง่าย |
 | Styling | Tailwind CSS + shadcn/ui | ยก components จาก ShopDash ได้ |
-| Auth | Auth.js (NextAuth v5) + LINE Login + เบอร์โทร OTP | เกษตรกรไทยใช้ LINE ทุกคน |
+| Auth | Auth.js (NextAuth v5) + LINE Login (หลัก) + Email/รหัสผ่าน + Google Login | เกษตรกรไทยใช้ LINE ทุกคน แต่ต้องมีทางเลือกสำหรับคนที่ไม่มี LINE (ตัดสินใจหลัง M2 — เดิมมีแผน "เบอร์โทร OTP" เป็นสำรอง แต่เลื่อนไป Phase 2 เพราะมีต้นทุนค่า SMS ต่อครั้ง จึงใช้ Email/รหัสผ่าน + Google แทนเพราะไม่มีต้นทุนต่อการใช้งาน) |
 | Image storage | Cloudflare R2 + next/image | ไม่มีค่า egress, ถูก |
 | Search (MVP) | Postgres full-text + trigram (pg_trgm) | พอสำหรับหมื่นประกาศแรก |
 | Search (later) | Meilisearch | เมื่อประกาศ > 50k หรือต้องการ typo-tolerance ภาษาไทย |

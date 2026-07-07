@@ -2,8 +2,45 @@
 
 > อัปเดตหลังจบทุก milestone — session ใหม่อ่านไฟล์นี้คู่กับ CLAUDE.md + PLAN.md
 
-- **Milestone ปัจจุบัน:** M2 เสร็จแล้ว ✅ — พร้อมเริ่ม M3 (Auth: LINE Login)
+- **Milestone ปัจจุบัน:** M3 เสร็จแล้ว ✅ — พร้อมเริ่ม M4 (Image upload: Cloudflare R2)
 - **อัปเดตล่าสุด:** 2026-07-07
+
+---
+
+## M3: Auth — LINE + Email/รหัสผ่าน + Google ✅ (2026-07-07)
+
+### สิ่งที่ทำ
+
+- **Auth.js v5 (next-auth 5.0.0-beta.31)** + Prisma adapter + JWT session (จำเป็นเพราะใช้ Credentials provider ร่วม)
+- 3 ช่องทางล็อกอิน: **LINE (หลัก)** + **Google** + **Email/รหัสผ่าน** (bcryptjs, hash rounds 12)
+- Schema: `User` เพิ่ม `email`/`emailVerified`/`passwordHash`, เปลี่ยน `avatarUrl` → `image` (ตามที่ Auth.js adapter ต้องการ), เพิ่ม model `Account` (OAuth linking) — migration `20260707134236_add_auth`
+- โครงสร้างตาม §4: ทุกอย่างอยู่ `features/auth/` — `auth.ts` (NextAuth instance), `config.ts` (edge-safe สำหรับ middleware — **ห้าม import prisma ในไฟล์นี้**), `schemas.ts` (zod), `actions.ts` (register/login/oauth/logout), `components/` (ฟอร์ม + ปุ่ม OAuth)
+- `src/middleware.ts` กัน `/dashboard/*` (ต้องล็อกอิน) + `/admin/*` (ต้อง ADMIN, non-admin เด้งไป /dashboard) — role เก็บใน JWT ผ่าน `jwt`/`session` callbacks
+- หน้า `/login` (LINE เด่นบนสุด → Google → email form), `/register`, โครงหน้า `/dashboard` + `/admin` (เนื้อหาจริง M5/M7) พร้อมปุ่มออกจากระบบ
+- โครง phone OTP อยู่หลัง `FLAGS.PHONE_OTP` (ปิด) ตามแผน
+- Seed: admin มี login ทดสอบ `admin@kasetmarket.dev` / `admin1234` (dev เท่านั้น)
+- Header ยังเป็นลิงก์ /login แบบ static **โดยตั้งใจ** — ไม่เรียก `auth()` ใน layout เพราะจะทำให้หน้า public ทุกหน้ากลายเป็น dynamic เสีย ISR (ค่อยทำ session-aware header ด้วย client component ทีหลัง)
+
+### ทดสอบแล้ว (E2E ผ่าน browser จริง)
+
+- [x] เข้า `/dashboard` โดยไม่ล็อกอิน → เด้ง `/login?callbackUrl=...`
+- [x] สมัครด้วยอีเมล → auto-login → เข้า `/dashboard` แสดงชื่อ
+- [x] SELLER เข้า `/admin` → โดนเด้งกลับ `/dashboard`
+- [x] รหัสผ่านผิด → error ภาษาไทย, ล็อกอิน admin → เข้า `/admin` ได้
+- [x] ล็อกอินค้างอยู่แล้วเปิด `/login` → เด้งไป `/dashboard`, ออกจากระบบ → กลับหน้าแรก
+- [x] `npm run build` ผ่าน (หน้าแรกยัง Static ○, login/register/dashboard/admin เป็น Dynamic ƒ)
+- [ ] **LINE / Google OAuth ยังไม่ได้ทดสอบจริง** — ต้องรันบน port 3000 (callback URL ผูกไว้) — ดู Next step
+
+### ติดอะไร / ตัดสินใจอะไร
+
+- `prisma migrate dev` ใช้ไม่ได้ใน shell non-interactive → ใช้ `prisma migrate diff` สร้าง SQL เอง + `migrate deploy` แทน (ทำแบบนี้ได้อีกถ้าเจอ)
+- ตอนทดสอบ port 3000 ถูก dev server ของโปรเจ็ค **ShopDash** ใช้อยู่ → เพิ่ม `autoPort: true` ใน `.claude/launch.json` (dev รันที่ port อื่นได้ แต่ **ทดสอบ OAuth ต้องปิด ShopDash แล้วรันที่ 3000 เท่านั้น**)
+- user ทดสอบ `test-seller@example.com` / `testpass123` ค้างอยู่ใน DB (ลบได้ด้วย prisma studio หรือรัน seed ใหม่)
+
+### Next step (M4 — R2 image upload) + งานผู้ใช้
+
+- **งานของคุณ:** (1) ทดสอบ LINE + Google login จริง: ปิด ShopDash dev server → `npm run dev` → เปิด `http://localhost:3000/login` กดปุ่ม LINE และ Google (2) สมัคร Cloudflare R2 → สร้าง bucket `kasetmarket-images` → เอา credentials ใส่ `.env` (H0.5)
+- M4: R2 client ใน `lib/`, API route อัปโหลด (presigned/proxy), client-side resize ก่อนอัป, ผูกกับ next/image
 
 ---
 
@@ -31,8 +68,12 @@
 
 ### Next step (M3 — Auth)
 
-- Auth.js v5 + LINE provider + Prisma adapter, หน้า `/login`, middleware กัน `/dashboard/*` + `/admin/*`, โครง phone OTP หลัง flag
-- **งานของคุณก่อน M3:** สมัคร LINE Developers → สร้าง LINE Login channel → เอา `LINE_CLIENT_ID`, `LINE_CLIENT_SECRET` ใส่ `.env` + ตั้ง callback `http://localhost:3000/api/auth/callback/line` (H0.4)
+- Auth.js v5 + LINE provider + Google provider + Credentials (email/รหัสผ่าน) + Prisma adapter, หน้า `/login` + `/register`, middleware กัน `/dashboard/*` + `/admin/*`, โครง phone OTP หลัง flag
+- **เปลี่ยนจากแผนเดิม (2026-07-07):** ผู้ใช้ขอเพิ่มช่องทางสำหรับคนไม่มี LINE ตั้งแต่ MVP — เลือก Email/รหัสผ่าน + Google Login แทนที่จะเร่ง phone OTP (มีต้นทุน SMS) รายละเอียดดู CLAUDE.md §2 และ PLAN.md M3
+- **งานของคุณก่อน M3:**
+  - LINE: สมัคร LINE Developers → สร้าง LINE Login channel → เอา `LINE_CLIENT_ID`, `LINE_CLIENT_SECRET` ใส่ `.env` + ตั้ง callback `http://localhost:3000/api/auth/callback/line` (H0.4)
+  - Google: สร้าง OAuth credentials ที่ Google Cloud Console → เอา `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` ใส่ `.env` + ตั้ง redirect URI `http://localhost:3000/api/auth/callback/google`
+  - `AUTH_SECRET`: รัน `npx auth secret` แล้ววางค่าใน `.env`
 
 ---
 

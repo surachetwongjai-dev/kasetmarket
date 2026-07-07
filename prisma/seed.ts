@@ -2,6 +2,7 @@
 // รัน: npx prisma db seed — ลบข้อมูลเก่าทั้งหมดก่อนทุกครั้ง (dev เท่านั้น)
 
 import { PrismaClient, ListingStatus } from "@prisma/client";
+import bcrypt from "bcryptjs";
 import { generateSlug } from "../src/lib/slug";
 
 const prisma = new PrismaClient();
@@ -32,6 +33,9 @@ async function main() {
     data: {
       role: "ADMIN",
       name: "แอดมิน KasetMarket",
+      // login ทดสอบ (dev เท่านั้น): admin@kasetmarket.dev / admin1234
+      email: "admin@kasetmarket.dev",
+      passwordHash: bcrypt.hashSync("admin1234", 12),
       phone: "0810000001",
       province: "อุบลราชธานี",
       verified: true,

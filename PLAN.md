@@ -70,24 +70,30 @@
 
 ---
 
-## Milestone 3 — Auth (LINE Login + Phone OTP structure)
+## Milestone 3 — Auth (LINE Login + Email/รหัสผ่าน + Google Login)
 
-**เป้า:** สมัคร/ล็อกอินได้จริงด้วย LINE
+> **อัปเดตหลัง M2 (ตัดสินใจร่วมกับผู้ใช้):** เดิม M3 มีแผนสำรองเป็น "เบอร์โทร OTP" แต่ปิดไว้เพราะมีต้นทุนค่า SMS ต่อครั้ง (เปิดจริง Phase 2) — ผู้ใช้ต้องการช่องทางสำหรับคนที่ไม่มี LINE ตั้งแต่ MVP จึงเปลี่ยนมาใช้ **Email/รหัสผ่าน** และ **Google Login** แทน เพราะไม่มีต้นทุนต่อการใช้งาน ดูรายละเอียดใน CLAUDE.md §2
+
+**เป้า:** สมัคร/ล็อกอินได้จริงด้วย LINE (หลัก), Email/รหัสผ่าน และ Google (สำรองสำหรับคนไม่มี LINE)
 
 **สั่งให้ทำ:**
-- Auth.js v5 + LINE provider + Prisma adapter
-- หน้า `/login` — ปุ่ม "เข้าสู่ระบบด้วย LINE" เด่น
+- Auth.js v5 + LINE provider + Google provider + Credentials provider (email/password) + Prisma adapter
+- เพิ่ม field `email` (unique, nullable) + `passwordHash` (nullable) ใน `User` model + migrate
+- หน้า `/login` + `/register` — ปุ่ม "เข้าสู่ระบบด้วย LINE" เด่นสุด, ปุ่ม Google, ฟอร์ม email/รหัสผ่านสำรอง
+- Hash รหัสผ่านด้วย `bcrypt`, validate ด้วย zod
 - Session มี `user.id`, `user.role`
 - Middleware ป้องกัน `/dashboard/*` (ต้องล็อกอิน) และ `/admin/*` (ต้อง ADMIN)
 - โครง phone OTP ไว้หลัง feature flag `PHONE_OTP` (ปิดไว้ก่อน — ค่า SMS มีต้นทุน เปิด Phase 2)
+- **ยังไม่ทำ:** ส่งอีเมลยืนยันตัวตน/ลืมรหัสผ่านทางอีเมลจริง (ต้องมี email service เพิ่ม — เป็นงานเสริมนอก M3 นี้)
 
 **งานของคุณ:**
-- ใส่ callback URL ใน LINE Developers console: `https://<domain>/api/auth/callback/line` (dev ใช้ `http://localhost:3000/...`)
-- ใส่ `LINE_CLIENT_ID`, `LINE_CLIENT_SECRET`, `AUTH_SECRET` ใน `.env`
-- ทดสอบล็อกอินด้วย LINE จริงของคุณ แล้วแก้ role ตัวเองใน Prisma studio เป็น `ADMIN`
+- LINE: ใส่ callback URL ใน LINE Developers console: `https://<domain>/api/auth/callback/line` (dev ใช้ `http://localhost:3000/...`) + ใส่ `LINE_CLIENT_ID`, `LINE_CLIENT_SECRET` ใน `.env`
+- Google: สร้าง OAuth consent screen + credentials ที่ [Google Cloud Console](https://console.cloud.google.com/apis/credentials) → Authorized redirect URI: `http://localhost:3000/api/auth/callback/google` (dev) → ใส่ `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` ใน `.env`
+- ใส่ `AUTH_SECRET` ใน `.env` (`npx auth secret`)
+- ทดสอบล็อกอินทั้ง 3 ช่องทาง แล้วแก้ role ตัวเองใน Prisma studio เป็น `ADMIN`
 
 **เกณฑ์ตรวจรับ:**
-- ล็อกอิน LINE สำเร็จ, เข้า `/dashboard` ได้, คนไม่ล็อกอินโดนเด้งไป `/login`
+- ล็อกอินสำเร็จทั้ง LINE, Google, และ Email/รหัสผ่าน, เข้า `/dashboard` ได้, คนไม่ล็อกอินโดนเด้งไป `/login`
 - `/admin` เข้าได้เฉพาะ ADMIN
 
 **Commit:** `M3: auth`
