@@ -9,7 +9,7 @@ import { logoutAction } from "@/features/auth/actions";
 import { Badge } from "@/components/ui/badge";
 
 export const metadata: Metadata = {
-  title: "แดชบอร์ดผู้ขาย — KasetMarket",
+  title: "แดชบอร์ดผู้ขาย",
 };
 
 export default async function DashboardPage() {

@@ -6,7 +6,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/features/auth";
 
 export const metadata: Metadata = {
-  title: "ผู้ดูแลระบบ — KasetMarket",
+  title: "ผู้ดูแลระบบ",
 };
 
 export default async function AdminPage() {

@@ -36,6 +36,7 @@ model User {
   image         String? // avatar (ชื่อ field ตาม Auth.js adapter — เดิมคือ avatarUrl)
   province      String?
   verified      Boolean   @default(false) // แอดมินยืนยันตัวตนแล้ว → ประกาศใหม่ขึ้น ACTIVE ทันที
+  banned        Boolean   @default(false) // โดนแบน: ล็อกอินไม่ได้ + ลงประกาศไม่ได้ (M7)
   createdAt     DateTime  @default(now())
   accounts      Account[]
   listings      Listing[]
@@ -77,6 +78,7 @@ model Listing {
   contactPhone String?
   contactLine  String? // LINE ID หรือลิงก์
   status       ListingStatus  @default(PENDING)
+  rejectReason String? // เหตุผลตอนแอดมิน reject — แสดงให้ผู้ขายเห็นใน dashboard (M7)
   featured     Boolean        @default(false) // ประกาศเด่น (monetization)
   views        Int            @default(0)
   expiresAt    DateTime // default +30 วัน, ต่ออายุได้

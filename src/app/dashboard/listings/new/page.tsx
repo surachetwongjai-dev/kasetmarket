@@ -8,7 +8,7 @@ import { ListingForm } from "@/features/listings/components/listing-form";
 import { prisma } from "@/lib/prisma";
 
 export const metadata: Metadata = {
-  title: "ลงประกาศใหม่ — KasetMarket",
+  title: "ลงประกาศใหม่",
 };
 
 export default async function NewListingPage() {

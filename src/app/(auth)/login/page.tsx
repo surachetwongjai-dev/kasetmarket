@@ -7,7 +7,7 @@ import { LoginForm } from "@/features/auth/components/login-form";
 import { FLAGS } from "@/config/flags";
 
 export const metadata: Metadata = {
-  title: "เข้าสู่ระบบ — KasetMarket",
+  title: "เข้าสู่ระบบ",
 };
 
 // ข้อความ error จาก Auth.js (ส่งกลับมาทาง ?error=)

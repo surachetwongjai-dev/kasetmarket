@@ -9,7 +9,7 @@ import { ListingStatusBadge } from "@/features/listings/components/listing-statu
 import { getMyListingForEdit } from "@/features/listings/queries";
 
 export const metadata: Metadata = {
-  title: "แก้ไขประกาศ — KasetMarket",
+  title: "แก้ไขประกาศ",
 };
 
 export default async function EditListingPage({

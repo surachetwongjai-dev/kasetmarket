@@ -11,7 +11,7 @@ import { ListingStatusBadge } from "@/features/listings/components/listing-statu
 import { formatPricePerUnit, formatThaiDate, formatTimeAgo } from "@/lib/format";
 
 export const metadata: Metadata = {
-  title: "ประกาศของฉัน — KasetMarket",
+  title: "ประกาศของฉัน",
 };
 
 const NOTICES: Record<string, string> = {

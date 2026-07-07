@@ -5,7 +5,7 @@ import { auth } from "@/features/auth";
 import { RegisterForm } from "@/features/auth/components/register-form";
 
 export const metadata: Metadata = {
-  title: "สมัครสมาชิก — KasetMarket",
+  title: "สมัครสมาชิก",
 };
 
 export default async function RegisterPage() {

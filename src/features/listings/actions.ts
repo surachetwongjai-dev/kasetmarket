@@ -38,6 +38,12 @@ async function requireSession() {
   return session;
 }
 
+/** revalidate หน้า public ที่เกี่ยวข้อง (ISR on-demand — CLAUDE.md §2) */
+function revalidatePublic(slug?: string) {
+  revalidatePath("/listings");
+  if (slug) revalidatePath(`/listings/${slug}`);
+}
+
 /** ลงประกาศใหม่ */
 export async function createListingAction(
   _prev: ListingFormState,
@@ -98,6 +104,7 @@ export async function createListingAction(
   }
 
   revalidatePath("/dashboard/listings");
+  if (status === "ACTIVE") revalidatePublic();
   redirect(
     status === "ACTIVE"
       ? "/dashboard/listings?created=active"
@@ -120,7 +127,7 @@ export async function updateListingAction(
 
   const listing = await prisma.listing.findUnique({
     where: { id: listingId },
-    select: { sellerId: true },
+    select: { sellerId: true, slug: true },
   });
   if (!listing || listing.sellerId !== session.user.id) {
     return { error: "ไม่พบประกาศ หรือคุณไม่ใช่เจ้าของประกาศนี้" };
@@ -144,6 +151,7 @@ export async function updateListingAction(
   });
 
   revalidatePath("/dashboard/listings");
+  revalidatePublic(listing.slug);
   redirect("/dashboard/listings?updated=1");
 }
 
@@ -152,7 +160,7 @@ export async function updateListingAction(
 async function ownListingOrNull(listingId: string, userId: string) {
   const listing = await prisma.listing.findUnique({
     where: { id: listingId },
-    select: { id: true, sellerId: true, status: true },
+    select: { id: true, sellerId: true, status: true, slug: true },
   });
   return listing && listing.sellerId === userId ? listing : null;
 }
@@ -171,6 +179,7 @@ export async function markSoldAction(formData: FormData) {
     data: { status: "SOLD" },
   });
   revalidatePath("/dashboard/listings");
+  revalidatePublic(listing.slug);
 }
 
 /** ต่ออายุ +30 วัน — ถ้าหมดอายุไปแล้วให้กลับมา ACTIVE (verified) หรือ PENDING */
@@ -196,6 +205,7 @@ export async function renewListingAction(formData: FormData) {
     data: { expiresAt: expiryFromNow(), status },
   });
   revalidatePath("/dashboard/listings");
+  revalidatePublic(listing.slug);
 }
 
 /** ลบประกาศ (ลบจริง — รูปใน DB ลบตาม cascade) */
@@ -209,4 +219,5 @@ export async function deleteListingAction(formData: FormData) {
 
   await prisma.listing.delete({ where: { id: listing.id } });
   revalidatePath("/dashboard/listings");
+  revalidatePublic(listing.slug);
 }
