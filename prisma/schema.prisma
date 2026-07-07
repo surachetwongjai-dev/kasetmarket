@@ -1,0 +1,104 @@
+// Prisma schema ตาม CLAUDE.md §5
+// DATABASE_URL = Neon pooled (รันแอป), DIRECT_URL = Neon direct (migrate)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Role {
+  ADMIN
+  SELLER
+}
+
+enum ListingStatus {
+  PENDING
+  ACTIVE
+  SOLD
+  EXPIRED
+  REJECTED
+}
+
+model User {
+  id         String    @id @default(cuid())
+  role       Role      @default(SELLER)
+  name       String
+  phone      String?   @unique
+  lineUserId String?   @unique
+  avatarUrl  String?
+  province   String?
+  verified   Boolean   @default(false) // แอดมินยืนยันตัวตนแล้ว → ประกาศใหม่ขึ้น ACTIVE ทันที
+  createdAt  DateTime  @default(now())
+  listings   Listing[]
+  reports    Report[]
+}
+
+model Listing {
+  id           String         @id @default(cuid())
+  slug         String         @unique // SEO: /listings/ขายข้าวหอมมะลิ-สุรินทร์-x7f2
+  title        String
+  description  String         @db.Text
+  price        Decimal
+  unit         String // จาก config/units.ts
+  negotiable   Boolean        @default(true) // ต่อรองได้
+  category     String // จาก config/categories.ts
+  province     String
+  district     String?
+  images       ListingImage[]
+  contactPhone String?
+  contactLine  String? // LINE ID หรือลิงก์
+  status       ListingStatus  @default(PENDING)
+  featured     Boolean        @default(false) // ประกาศเด่น (monetization)
+  views        Int            @default(0)
+  expiresAt    DateTime // default +30 วัน, ต่ออายุได้
+  seller       User           @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  sellerId     String
+  reports      Report[]
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  @@index([category, province, status])
+  @@index([status, createdAt])
+}
+
+model ListingImage {
+  id        String  @id @default(cuid())
+  url       String
+  order     Int     @default(0)
+  listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  listingId String
+
+  @@index([listingId])
+}
+
+model Article {
+  id          String    @id @default(cuid())
+  slug        String    @unique
+  title       String
+  excerpt     String
+  content     String    @db.Text // Markdown
+  coverUrl    String?
+  category    String // ปุ๋ย/โรคพืช/ราคาตลาด/เทคนิค/ข่าวเกษตร
+  published   Boolean   @default(false)
+  publishedAt DateTime?
+  views       Int       @default(0)
+}
+
+model Report {
+  id         String   @id @default(cuid())
+  listing    Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  listingId  String
+  reporter   User?    @relation(fields: [reporterId], references: [id], onDelete: SetNull)
+  reporterId String?
+  reason     String // หลอกลวง/สินค้าผิดกม./สแปม/อื่นๆ
+  detail     String?
+  resolved   Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  @@index([resolved, createdAt])
+}

@@ -2,8 +2,37 @@
 
 > อัปเดตหลังจบทุก milestone — session ใหม่อ่านไฟล์นี้คู่กับ CLAUDE.md + PLAN.md
 
-- **Milestone ปัจจุบัน:** M1 เสร็จแล้ว ✅ — พร้อมเริ่ม M2 (Database Schema + Seed)
+- **Milestone ปัจจุบัน:** M2 เสร็จแล้ว ✅ — พร้อมเริ่ม M3 (Auth: LINE Login)
 - **อัปเดตล่าสุด:** 2026-07-07
+
+---
+
+## M2: Database Schema + Seed ✅ (2026-07-07)
+
+### สิ่งที่ทำ
+
+- **Prisma 6.19.3** + `prisma/schema.prisma` ครบทุก model ตาม CLAUDE.md §5: `User`, `Listing`, `ListingImage`, `Article`, `Report` + enum `Role`, `ListingStatus`
+- Migration แรก `20260707054347_init` apply กับ Neon แล้ว
+- `src/lib/prisma.ts` — PrismaClient singleton (กัน hot reload สร้าง connection ซ้ำ)
+- `prisma/seed.ts` (รันด้วย `npx prisma db seed` ผ่าน tsx): admin 1, seller 3 (verified 2 + unverified 1), ประกาศ 20 กระจายครบ 10 หมวด × หลายจังหวัด (ACTIVE 13 / PENDING 5 / SOLD 1 / REJECTED 1, featured 3), รูป placeholder จาก picsum.photos 32 รูป, บทความ 3 เรื่อง (published)
+- Seed ลบข้อมูลเก่าก่อนเสมอ (รันซ้ำได้) และ implement กติกา "seller ไม่ verified → PENDING" ตั้งแต่ใน seed
+
+### การตัดสินใจระหว่างทาง
+
+1. **Pin Prisma 6** (ไม่ใช้ 7 ที่เป็น latest) — Prisma 7 เปลี่ยน generator/config/driver adapter ยกชุด ยัง breaking กับ pattern เดิม; ค่อยพิจารณา upgrade หลัง MVP
+2. **Neon pooled URL ต้องมี `pgbouncer=true&connect_timeout=15`** (ใส่ใน `.env` + `.env.sample` แล้ว) — PgBouncer transaction mode ไม่รองรับ prepared statements ของ Prisma; ส่วน migrate ใช้ `directUrl`
+3. เพิ่ม relation จริง `Report ↔ Listing` (spec เดิมมีแค่ `listingId` string) + `onDelete: Cascade`/`SetNull` — admin M7 ต้องลิงก์จากรายงานไปประกาศ
+4. Schema เพิ่ม `@@index([listingId])` บน ListingImage และ `@@index([resolved, createdAt])` บน Report
+
+### เกณฑ์ตรวจรับที่ผ่านแล้ว
+
+- [x] ข้อมูล seed ครบใน DB (ตรวจด้วย query จริง: users 4, listings 20, images 32, articles 3) — ดูผ่าน `npx prisma studio` ได้
+- [x] `npm run build` ผ่าน
+
+### Next step (M3 — Auth)
+
+- Auth.js v5 + LINE provider + Prisma adapter, หน้า `/login`, middleware กัน `/dashboard/*` + `/admin/*`, โครง phone OTP หลัง flag
+- **งานของคุณก่อน M3:** สมัคร LINE Developers → สร้าง LINE Login channel → เอา `LINE_CLIENT_ID`, `LINE_CLIENT_SECRET` ใส่ `.env` + ตั้ง callback `http://localhost:3000/api/auth/callback/line` (H0.4)
 
 ---
 
