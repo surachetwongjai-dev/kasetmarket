@@ -2,6 +2,7 @@
 // dynamic, no cache ตาม rendering strategy (CLAUDE.md §2)
 
 import type { Metadata } from "next";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/features/auth";
 import { logoutAction } from "@/features/auth/actions";
@@ -39,8 +40,25 @@ export default async function DashboardPage() {
         </form>
       </div>
 
-      <div className="mt-8 rounded-xl border border-dashed border-border bg-card p-8 text-center text-muted-foreground">
-        ส่วนจัดการประกาศจะมาใน M5 — ลงประกาศ แก้ไข ปิดการขาย ต่ออายุ และดูยอดวิว
+      <div className="mt-8 grid gap-3 sm:grid-cols-2">
+        <Link
+          href="/dashboard/listings/new"
+          className="flex min-h-24 flex-col justify-center rounded-xl bg-primary p-5 text-primary-foreground transition-colors hover:bg-primary/90"
+        >
+          <span className="text-lg font-semibold">+ ลงประกาศใหม่</span>
+          <span className="mt-1 text-sm opacity-90">
+            ลงฟรี ไม่จำกัดหมวด สูงสุด 5 ประกาศ/วัน
+          </span>
+        </Link>
+        <Link
+          href="/dashboard/listings"
+          className="flex min-h-24 flex-col justify-center rounded-xl border border-border bg-card p-5 transition-colors hover:bg-muted"
+        >
+          <span className="text-lg font-semibold">ประกาศของฉัน</span>
+          <span className="mt-1 text-sm text-muted-foreground">
+            แก้ไข ปิดการขาย ต่ออายุ และดูยอดวิว
+          </span>
+        </Link>
       </div>
     </main>
   );

@@ -26,12 +26,23 @@ const MAX_IMAGES = 6;
 export function ImageUploader({
   onChange,
   disabled,
+  initial,
 }: {
   /** เรียกทุกครั้งที่รายการรูป (ที่อัปเสร็จแล้ว) เปลี่ยน — เรียงตามลำดับแสดงผล */
   onChange: (images: UploadedImage[]) => void;
   disabled?: boolean;
+  /** รูปเดิมของประกาศ (โหมดแก้ไข) — ใช้ค่าตอน mount ครั้งแรกเท่านั้น */
+  initial?: UploadedImage[];
 }) {
-  const [items, setItems] = useState<Item[]>([]);
+  const [items, setItems] = useState<Item[]>(() =>
+    (initial ?? []).slice(0, MAX_IMAGES).map((img) => ({
+      id: crypto.randomUUID(),
+      previewUrl: img.url,
+      progress: 100,
+      status: "done" as const,
+      image: img,
+    })),
+  );
   const inputRef = useRef<HTMLInputElement>(null);
   const dragIndex = useRef<number | null>(null);
 

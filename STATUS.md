@@ -2,8 +2,36 @@
 
 > อัปเดตหลังจบทุก milestone — session ใหม่อ่านไฟล์นี้คู่กับ CLAUDE.md + PLAN.md
 
-- **Milestone ปัจจุบัน:** M4 เสร็จแล้ว ✅ (รันบน local driver — รอ R2 credentials) — พร้อมเริ่ม M5 (ลงประกาศ + จัดการประกาศ)
+- **Milestone ปัจจุบัน:** M5 เสร็จแล้ว ✅ — พร้อมเริ่ม M6 (หน้าสาธารณะ: รวมประกาศ + ประกาศรายตัว)
 - **อัปเดตล่าสุด:** 2026-07-07
+
+---
+
+## M5: ลงประกาศ + จัดการประกาศ (Seller core) ✅ (2026-07-07)
+
+### สิ่งที่ทำ
+
+- `features/listings/` ครบวงจร: `schemas.ts` (zod + `listingFormDataToObject`), `actions.ts` (create/update/markSold/renew/delete — ทุกตัวตรวจ session + ownership), `queries.ts`, `components/` (listing-form, listing-row-actions, listing-status-badge + image-uploader จาก M4)
+- ฟอร์ม `/dashboard/listings/new` + `/dashboard/listings/[id]/edit` (ฟอร์มเดียวใช้ร่วม 2 โหมด): รูป ≤6, ชื่อ, รายละเอียด, ราคา+หน่วย, ต่อรองได้, หมวด, จังหวัด (จัดกลุ่มตามภาค)/อำเภอ, เบอร์โทร+LINE — **บังคับช่องทางติดต่ออย่างน้อย 1 อย่าง**, บังคับรูปอย่างน้อย 1 รูป, เบอร์โทร prefill จากโปรไฟล์
+- `/dashboard/listings`: การ์ดประกาศ (thumbnail, ป้ายราคา/หน่วย, สถานะ, วิว, วันหมดอายุ) + ปุ่ม แก้ไข/ขายแล้ว/ต่ออายุ/ลบ (confirm ก่อนลบ/ปิดขาย), ปุ่ม "ขายแล้ว" แสดงเฉพาะสถานะ ACTIVE/PENDING
+- Logic ตามกติกา §8: verified → ACTIVE / ไม่ verified → PENDING (+ ข้อความบอกผู้ขายชัดเจนว่ารอตรวจ), expiresAt +30 วัน, ต่ออายุจาก EXPIRED กลับเป็น ACTIVE (verified) หรือ PENDING, **rate limit 5 ประกาศ/วัน** (นับตามวันปฏิทินเวลาไทย UTC+7)
+- แก้ไข: แทนที่รูปทั้งชุดตามลำดับใหม่ (`deleteMany` + `create`), สถานะคงเดิม
+- Slug ไทยผ่าน `generateSlug` + retry 3 ครั้งถ้าชน (P2002)
+- ImageUploader รองรับ `initial` (โหมดแก้ไข), ลบหน้า `upload-demo` ชั่วคราวของ M4, dashboard home เป็นปุ่มลัด 2 ใบ
+
+### ทดสอบแล้ว (E2E บน browser จริง)
+
+- [x] admin (verified) ลงประกาศ → ACTIVE ทันที + แสดงในรายการพร้อมป้ายราคา "13,900 บาท/ตัน" หมดอายุ +30 วัน
+- [x] test-seller (ไม่ verified) ลงประกาศ → PENDING + ข้อความรอตรวจ
+- [x] ไม่ใส่ช่องทางติดต่อ → โดน validate, แก้ไขราคา → อัปเดตจริง, ขายแล้ว → badge เปลี่ยน+ปุ่มหาย, EXPIRED → ต่ออายุ → กลับ ACTIVE, ลบ → หายจริง
+- [x] ประกาศที่ 6 ในวันเดียว → โดนบล็อกพร้อมข้อความ
+- [x] slug ไทยถูก pattern, `npm run build` ผ่าน
+- ข้อมูลทดสอบลบหมดแล้ว (DB กลับเป็น seed 20 รายการ)
+
+### Next step (M6 — หน้าสาธารณะ)
+
+- `/listings` grid + filter (หมวด/จังหวัด/ราคา) + เรียง + pagination, `/listings/[slug]` (gallery, ป้ายราคาใหญ่, ปุ่มโทร/LINE sticky, แสดงเบอร์เมื่อกด, รายงาน, ใกล้เคียง 4, view counter), FTS + pg_trgm, JSON-LD, ISR 300s + on-demand revalidate — ตอนนั้นค่อยเพิ่ม `revalidatePath`/`revalidateTag` ใน actions M5
+- งานผู้ใช้ค้างเดิม: ทดสอบ LINE/Google บน port 3000, ใส่ R2 credentials
 
 ---
 
