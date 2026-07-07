@@ -115,3 +115,51 @@
     @apply font-heading font-semibold;
   }
 }
+
+/* สไตล์เนื้อหาบทความจาก Markdown (ไม่มี typography plugin — เขียนเอง)
+   อ่านง่ายบนมือถือ: บรรทัดโปร่ง หัวข้อชัด */
+.article-prose {
+  @apply text-base leading-relaxed text-foreground;
+}
+.article-prose > :first-child {
+  margin-top: 0;
+}
+.article-prose h2 {
+  @apply mt-8 mb-3 font-heading text-xl font-bold text-primary-dk;
+}
+.article-prose h3 {
+  @apply mt-6 mb-2 font-heading text-lg font-semibold;
+}
+.article-prose p {
+  @apply my-4;
+}
+.article-prose ul {
+  @apply my-4 list-disc space-y-1 pl-6;
+}
+.article-prose ol {
+  @apply my-4 list-decimal space-y-1 pl-6;
+}
+.article-prose a {
+  @apply font-medium text-primary underline underline-offset-2;
+}
+.article-prose strong {
+  @apply font-semibold text-foreground;
+}
+.article-prose blockquote {
+  @apply my-4 rounded-r-lg border-l-4 border-accent bg-accent/10 py-2 pr-3 pl-4 text-muted-foreground;
+}
+.article-prose img {
+  @apply my-4 rounded-lg;
+}
+.article-prose code {
+  @apply rounded bg-muted px-1 py-0.5 font-mono text-sm;
+}
+.article-prose pre {
+  @apply my-4 overflow-x-auto rounded-lg bg-muted p-3 text-sm;
+}
+.article-prose pre code {
+  @apply bg-transparent p-0;
+}
+.article-prose hr {
+  @apply my-6 border-border;
+}

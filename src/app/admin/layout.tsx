@@ -10,6 +10,7 @@ const TABS = [
   { href: "/admin/users", label: "ผู้ใช้" },
   { href: "/admin/reports", label: "รายงาน" },
   { href: "/admin/listings", label: "ประกาศ" },
+  { href: "/admin/articles", label: "บทความ" },
 ];
 
 export default async function AdminLayout({

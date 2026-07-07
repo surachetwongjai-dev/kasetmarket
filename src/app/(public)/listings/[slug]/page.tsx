@@ -71,7 +71,10 @@ export default async function ListingDetailPage({ params }: Props) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <ViewTracker listingId={listing.id} />
+      <ViewTracker
+        endpoint={`/api/listings/${listing.id}/view`}
+        dedupeKey={`listing:${listing.id}`}
+      />
 
       {/* breadcrumb แบบง่าย */}
       <nav className="text-sm text-muted-foreground">

@@ -2,8 +2,35 @@
 
 > อัปเดตหลังจบทุก milestone — session ใหม่อ่านไฟล์นี้คู่กับ CLAUDE.md + PLAN.md
 
-- **Milestone ปัจจุบัน:** M7 เสร็จแล้ว ✅ — พร้อมเริ่ม M8 (บทความ + CMS)
+- **Milestone ปัจจุบัน:** M8 เสร็จแล้ว ✅ — พร้อมเริ่ม M9 (หน้าแรก + โปรไฟล์ผู้ขาย + Sitemap)
 - **อัปเดตล่าสุด:** 2026-07-07
+
+---
+
+## M8: บทความ + CMS ✅ (2026-07-07)
+
+### สิ่งที่ทำ
+
+- `config/articleCategories.ts`: 5 หมวด (ปุ๋ย/โรคพืช/ราคาตลาด/เทคนิค/ข่าวเกษตร) เก็บ label ไทยตรงๆ ใน DB (ตรงกับ seed M2) + **mapping ไปหมวดประกาศ** สำหรับ CTA
+- `lib/markdown.ts`: `marked` แปลง MD→HTML (⚠️ ไม่ sanitize — บทความเขียนโดยแอดมิน = trusted; ถ้าเปิดให้คนอื่นเขียนต้องเพิ่ม sanitize ก่อน) + `stripMarkdown` สำหรับ meta description
+- `features/articles/` ครบ: schemas (zod), actions (create/update/toggle publish/delete — admin only, slug retry, `publishedAt` ตั้งครั้งแรกไม่รีเซ็ต), queries (public เห็นเฉพาะ published), components (article-card, article-form, cover-uploader, article-admin-actions)
+- **CMS `/admin/articles`** (+ `/new`, `/[id]/edit`): ฟอร์ม Markdown + **ปุ่มสลับ preview สด** (marked ฝั่ง client), อัปรูปปก (reuse compress+upload M4), เลือกหมวด, publish/draft toggle, ลบ — เพิ่มแท็บ "บทความ" ใน admin layout
+- **Public `/articles`** (ISR 1 ชม.): grid + filter หมวดแบบ chip · **`/articles/[slug]`** (ISR 1 ชม.): render Markdown ด้วย `.article-prose` (สไตล์เขียนเองใน globals.css — ไม่มี typography plugin), JSON-LD `Article`, บทความเกี่ยวข้องหมวดเดียวกัน 3 เรื่อง, **CTA → หมวดประกาศที่เกี่ยว** (ชั้นคอนเทนต์→รายได้ §8), นับยอดอ่าน
+- ViewTracker ทำเป็น generic (endpoint + dedupeKey) ใช้ร่วมประกาศ+บทความ, เพิ่ม `/api/articles/[id]/view`
+
+### ทดสอบแล้ว (E2E บน browser จริง)
+
+- [x] `/articles` แสดง 3 seed + filter chip 5 หมวด, `/articles/[slug]` render MD ครบ (h2/strong/blockquote/list), JSON-LD `Article`, CTA ไปหมวดปุ๋ย
+- [x] **Flow CMS:** admin เขียนบทความใหม่ (หมวดเทคนิค) → preview สดถูกต้อง → ติ๊กเผยแพร่ → บันทึก → **ขึ้นหน้า public ทันที** (revalidate) → related article โผล่ (จับคู่หมวดเทคนิคกับ seed เดิมได้)
+- [x] เลิกเผยแพร่ → **หายจาก public** (4→3), ลบ → หายจากระบบ
+- [x] มือถือ 375px: body 16px, ไม่มี horizontal scroll, CTA แสดง
+- [x] `npm run build` ผ่าน — ข้อมูลทดสอบล้างหมด (DB = seed 3 บทความ)
+- ยังไม่ได้วัด: Google Rich Results Test (ต้อง public URL — วัดตอน deploy) — JSON-LD Article มีโครงครบ (headline/description/datePublished/author/publisher)
+
+### Next step (M9)
+
+- หน้าแรกประกอบร่าง (ประกาศล่าสุด+เด่น+หมวด+บทความล่าสุด), หน้าโปรไฟล์ผู้ขาย `/sellers/[id]`, sitemap.xml + robots.txt
+- งานผู้ใช้ค้าง: ทดสอบ LINE/Google (port 3000), ใส่ R2, เตรียมบทความจริง 15-20 เรื่องจากสคริปต์ YouTube (Claude ช่วยแปลง MD ได้)
 
 ---
 
