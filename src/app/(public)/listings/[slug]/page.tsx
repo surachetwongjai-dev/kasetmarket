@@ -18,14 +18,14 @@ import { getCategoryLabel } from "@/config/categories";
 import { getUnitLabel } from "@/config/units";
 import { formatPrice, formatThaiDate, formatTimeAgo } from "@/lib/format";
 
-export const revalidate = 300;
+// [BISECT TEST] revalidate ถอดชั่วคราว
 
 type Props = { params: Promise<{ slug: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const listing = await getActiveListingBySlug(decodeURIComponent(slug));
-  if (!listing) return { title: "ไม่พบประกาศ" };
+  if (!listing) notFound();
 
   // title pattern §9: "ขาย{สินค้า} {จังหวัด} ราคา{ราคา} บาท/{หน่วย}"
   const title = `${listing.title} ${listing.province} ราคา ${formatPrice(Number(listing.price))} บาท/${getUnitLabel(listing.unit)}`;

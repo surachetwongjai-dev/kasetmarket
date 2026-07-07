@@ -22,7 +22,7 @@ type Props = { params: Promise<{ slug: string }> };
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const article = await getPublishedArticleBySlug(decodeURIComponent(slug));
-  if (!article) return { title: "ไม่พบบทความ" };
+  if (!article) notFound();
 
   const description = article.excerpt || stripMarkdown(article.content);
   return {

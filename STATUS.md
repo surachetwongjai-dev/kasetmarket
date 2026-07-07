@@ -2,8 +2,41 @@
 
 > อัปเดตหลังจบทุก milestone — session ใหม่อ่านไฟล์นี้คู่กับ CLAUDE.md + PLAN.md
 
-- **Milestone ปัจจุบัน:** M9 เสร็จแล้ว ✅ — พร้อมเริ่ม M10 (Polish + ทดสอบรวม)
+- **Milestone ปัจจุบัน:** M10 เสร็จแล้ว ✅ — พร้อมเริ่ม M11 (Deploy Production)
 - **อัปเดตล่าสุด:** 2026-07-07
+
+---
+
+## M10: Polish + ทดสอบรวม ✅ (2026-07-07)
+
+### สิ่งที่ทำ (ส่วนโค้ด)
+
+- **Retry อัปรูป** (สเปคระบุ "อัปรูปล้ม/network ล้ม — retry ได้"): `ImageUploader` เก็บ `File` ไว้ในแต่ละ item, เมื่ออัปล้มแสดง error + ปุ่ม **"ลองอีกครั้ง"** ยิงใหม่จากไฟล์เดิม (เทสต์จริง: override fetch ให้ล้ม → เห็น error+ปุ่ม → คืน fetch → กด retry → อัปสำเร็จ)
+- **เปลี่ยน build เป็น non-turbopack** (`next build` ไม่มี `--turbopack`) — แก้ปัญหา `next start` พัง (`routesManifest.dataRoutes is not iterable`) ที่พบใน M9 ทำให้ `npm run build && npm start` รันได้จริง สำคัญต่อ self-host VPS (แผน M11); dev ยังใช้ `--turbopack` (เร็ว)
+- ทบทวน **empty states** ครบทุก surface (listings/articles/dashboard/seller/home/admin ทุกแท็บ) — มีครบตั้งแต่ M5-M9, loading skeleton หน้า list มีจาก M9
+
+### ทดสอบแล้ว
+
+- [x] **Responsive 360px**: home / listings / listing detail — ไม่มี horizontal overflow (scrollW = 362 = viewport)
+- [x] **A11y**: รูปทั้งหมดมี `alt` ครบ (0 missing จาก 13 รูป), focus-visible ring บน interactive elements (แสดงเฉพาะ keyboard nav — ถูกต้อง), touch target ≥44px (h-11/h-12), semantic HTML (nav/main/article/header)
+- [x] **N+1**: query หน้า list ทุกหน้าใช้ `include: { images: { take: 1 }}` (join เดียว), หน้าแรก 3 query ขนาน, admin ใช้ select/include — ไม่มี N+1
+- [x] retry อัปรูปทำงาน, `npm run build` (non-turbopack) ผ่าน
+
+### 🔴 ผลสืบสวน soft-404 (แก้ไข/อัปเกรดจากโน้ต M9)
+
+ขุดลึกด้วย production build จริง (`next build` + `next start`) — **ยืนยันว่าไม่ใช่ dev/turbopack artifact แต่เป็นบั๊ก soft-404 จริงบน prod**: `/listings/[slug]` และ `/articles/[slug]` ที่ไม่มีจริง render เนื้อหา not-found ถูกต้องแต่คืน **HTTP 200 แทน 404** (`/sellers/[id]` คืน 404 ถูก)
+
+**ตัดตัวแปรครบด้วยการทดลอง (build+start จริงหลายรอบ):** ไม่ใช่ generateMetadata, ไม่ใช่ loading.tsx, ไม่ใช่ revalidate, ไม่ใช่ decodeURIComponent, ไม่ใช่ render tree, ไม่ใช่ co-located not-found, ไม่ใช่ build cache — **สร้าง route ทดสอบ `[slug]` ที่โค้ด+query เหมือนกันเป๊ะในกลุ่ม `(public)` เดียวกัน → คืน 404 ถูกต้อง** พิสูจน์ว่า**โค้ดแอปถูกต้อง** เป็น nondeterminism ระดับ route manifest ของ Next 15.5 ที่แก้ที่ระดับโค้ดแอปไม่ได้
+
+**ผลกระทบจำกัด:** กระทบเฉพาะ URL ประกาศ/บทความที่ถูกลบ/หมดอายุ (ซึ่งไม่อยู่ใน sitemap อยู่แล้ว) — เนื้อหา not-found แสดงถูก ผู้ใช้ไม่สับสน แค่ Google อาจ deindex ช้าลงเล็กน้อย
+
+**Mitigation ที่ต้องทำ M11:** (1) ตรวจ status 404 บน Vercel prod จริง (Vercel อาจ handle ต่างจาก `next start`) (2) ถ้ายังเป็น ให้ลอง upgrade Next patch version หรือปรับโครง route (เช่น ย้าย list page ไป `/listings/browse`) (3) ถ้ายอมรับได้ ก็ปล่อยเพราะผลกระทบต่ำ
+
+### Next step (M11 — Deploy)
+
+- Deploy Vercel, ตั้ง env จริง (`DATABASE_URL`, `AUTH_SECRET`, LINE/Google, R2, `NEXT_PUBLIC_SITE_URL`, `NEXT_PUBLIC_YOUTUBE_URL`), ตั้ง LINE/Google callback เป็น domain จริง, ยืนยัน soft-404 บน prod
+- **Checklist ทดสอบมือของคุณ (มือถือจริง):** สมัคร LINE → ลงประกาศ → admin อนุมัติ → กดโทร/LINE, ค้นหา+filter, แก้/ปิด/ต่ออายุ, report→admin, อ่านบทความ→CTA
+- งานเนื้อหา: บทความจริง 15-20 เรื่อง
 
 ---
 

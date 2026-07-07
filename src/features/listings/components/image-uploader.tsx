@@ -19,6 +19,7 @@ type Item = {
   status: "uploading" | "done" | "error";
   errorMessage?: string;
   image?: UploadedImage;
+  file?: File; // เก็บไว้เผื่อ retry เมื่ออัปล้ม
 };
 
 const MAX_IMAGES = 6;
@@ -82,7 +83,7 @@ export function ImageUploader({
       const previewUrl = URL.createObjectURL(file);
       setItems((prev) => [
         ...prev,
-        { id, previewUrl, progress: 0, status: "uploading" },
+        { id, previewUrl, progress: 0, status: "uploading", file },
       ]);
       uploadOne(id, file); // ยิงขนานกันได้ ไม่ await
     }
@@ -121,6 +122,13 @@ export function ImageUploader({
           error instanceof Error ? error.message : "อัปโหลดไม่สำเร็จ",
       });
     }
+  }
+
+  function retryUpload(id: string) {
+    const item = items.find((it) => it.id === id);
+    if (!item?.file) return;
+    patchItem(id, { status: "uploading", progress: 0, errorMessage: undefined });
+    uploadOne(id, item.file);
   }
 
   function removeItem(id: string) {
@@ -178,8 +186,17 @@ export function ImageUploader({
             )}
 
             {item.status === "error" && (
-              <div className="absolute inset-0 flex items-center justify-center bg-destructive/70 p-1 text-center text-xs text-white">
-                {item.errorMessage}
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 bg-destructive/80 p-2 text-center text-xs text-white">
+                <span>{item.errorMessage}</span>
+                {item.file && (
+                  <button
+                    type="button"
+                    onClick={() => retryUpload(item.id)}
+                    className="rounded-md bg-white/90 px-2 py-1 text-xs font-semibold text-destructive hover:bg-white"
+                  >
+                    ลองอีกครั้ง
+                  </button>
+                )}
               </div>
             )}
 
