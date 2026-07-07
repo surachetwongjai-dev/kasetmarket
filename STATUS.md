@@ -2,8 +2,55 @@
 
 > อัปเดตหลังจบทุก milestone — session ใหม่อ่านไฟล์นี้คู่กับ CLAUDE.md + PLAN.md
 
-- **Milestone ปัจจุบัน:** M5 เสร็จแล้ว ✅ — พร้อมเริ่ม M6 (หน้าสาธารณะ: รวมประกาศ + ประกาศรายตัว)
+- **Milestone ปัจจุบัน:** M7 เสร็จแล้ว ✅ — พร้อมเริ่ม M8 (บทความ + CMS)
 - **อัปเดตล่าสุด:** 2026-07-07
+
+---
+
+## M7: Admin — Moderation + จัดการ user ✅ (2026-07-07)
+
+### สิ่งที่ทำ
+
+- Schema: `User.banned`, `Listing.rejectReason` (migration `20260707173554_search_and_admin` รวมกับ pg_trgm ของ M6)
+- `features/moderation/` ครบ: queries (สถิติ, คิว PENDING, users+ค้นหา, reports, ค้นประกาศ), actions ทุกตัวผ่าน `requireAdmin()` — approve / reject พร้อมเหตุผล (zod ≥5 ตัวอักษร) / toggle featured / toggle verify / toggle ban (กันแบนตัวเอง+แอดมิน) / resolve report / **ปิดประกาศจากรายงาน** (REJECTED + เหตุผลอัตโนมัติ + resolve ใน transaction เดียว)
+- หน้า admin (มี `admin/layout.tsx` ตรวจ role + แท็บ, mobile-first): `/admin` ตัวเลข 4 ใบ (คิว/รายงานค้างเน้นสีทอง), `/admin/moderation` คิวเก่าสุดก่อน เห็นรูปทุกใบ+รายละเอียดเต็ม+ข้อมูลผู้ขาย, `/admin/users` ค้นหา+verify+ban, `/admin/reports` ลิงก์ไปประกาศ+ตรวจแล้ว+ปิดประกาศทันที, `/admin/listings` ค้นหา+ตั้ง/ถอดประกาศเด่น
+- **ระบบแบน**: เช็คใน Credentials authorize + OAuth signIn callback (ล็อกอินไม่ได้) + createListingAction (ลงประกาศไม่ได้) — session เก่าที่ยังไม่หมดอายุ (JWT) จะยังใช้ได้จนหมด maxAge เป็นข้อจำกัดที่รับได้ใน MVP
+- **Loop เหตุผล reject**: ผู้ขายเห็นเหตุผลใน dashboard + แก้ไขประกาศที่โดน reject → กลับเข้าคิว PENDING อัตโนมัติ (เคลียร์เหตุผลเดิม)
+- ทุก action revalidate หน้า public ที่เกี่ยว (`/admin` layout + `/listings` + หน้าประกาศ)
+
+### ทดสอบแล้ว (E2E เต็ม flow เกณฑ์ตรวจรับ)
+
+- [x] **Flow ครบวงจร:** test-seller (ไม่ verified) ลงประกาศเมล่อน → PENDING → admin เห็นในคิว (6 รายการ) → approve → ขึ้น `/listings` จริง → มีคน report "หลอกลวง" → admin กด "ปิดประกาศทันที" จากหน้ารายงาน → หายจากหน้าเว็บ + ผู้ขายเห็นเหตุผลใน dashboard
+- [x] reject พร้อมเหตุผล → ผู้ขายเห็นข้อความเหตุผล
+- [x] **verify user → ประกาศถัดไปของเขาขึ้น ACTIVE ทันที** (ไม่เข้าคิว)
+- [x] ban → ล็อกอินด้วยรหัสถูกก็เข้าไม่ได้
+- [x] ตัวเลข dashboard ถูกทุกใบ, ค้นหา user ทำงาน, featured toggle เปลี่ยน badge จริง
+- [x] `npm run build` ผ่าน — ข้อมูลทดสอบล้างหมด (DB = seed 20 รายการ, PENDING 5)
+
+---
+
+## M6: หน้าสาธารณะ — รวมประกาศ + ประกาศรายตัว ✅ (2026-07-07)
+
+### สิ่งที่ทำ
+
+- **`/listings`**: grid การ์ด (รูป 4:3 → ชื่อ → ป้ายราคาทอง → จังหวัด+เวลา) + filter หมวด/จังหวัด/ช่วงราคา + เรียง (ใหม่สุด/ถูกสุด) + pagination — filter เป็น **form GET ล้วน ทำงานได้โดยไม่ต้องมี JS** (เน็ตช้า/เครื่องเก่า)
+- **`/listings/[slug]`**: ISR `revalidate=300` + on-demand จาก actions, gallery แตะสลับรูป, ป้ายราคาใหญ่, ผู้ขาย+badge ยืนยัน, **ปุ่มโทร (กด "แสดงเบอร์" ก่อน — กัน scraping) + LINE sticky ล่างจอมือถือ (สูง 48px)**, ปุ่มรายงาน (dialog, ไม่บังคับล็อกอิน, กันรายงานซ้ำ/วัน), ประกาศใกล้เคียง 4 (หมวดเดียวกัน จังหวัดเดียวกันก่อน), view counter (sendBeacon → `/api/listings/[id]/view`, กันซ้ำด้วย sessionStorage), คำเตือนความปลอดภัยผู้ซื้อ
+- **ค้นหา**: pg_trgm extension + GIN index บน title/description → Prisma `contains insensitive` (ILIKE ใช้ index นี้) — เลือกทางนี้แทน tsvector เพราะ FTS ของ Postgres ตัดคำไทยไม่ได้ (ไม่มีช่องว่าง) แต่ trigram จับ substring ไทยได้ดี
+- **SEO**: JSON-LD `Product`+`Offer`, title ตาม pattern §9, OG image = รูปแรก, แก้ title ซ้ำ "| KasetMarket" ทุกหน้า (layout มี template อยู่แล้ว)
+- Public queries ทุกตัว filter `ACTIVE` + `expiresAt > now` (ประกาศเลยอายุแต่ยังไม่มี cron เปลี่ยนสถานะ → ไม่โชว์)
+- คอมโพเนนต์ใหม่ใน `features/listings/components/`: price-tag (signature element), listing-card, listing-filters, listing-pagination, listing-gallery, contact-buttons, view-tracker + `features/moderation/`: report-button
+
+### ทดสอบแล้ว (E2E)
+
+- [x] Filter ทุกคอมโบถูก: หมวด (2), ค้นหาไทย "ทุเรียน" (1 — REJECTED ไม่โชว์), เรียงถูกสุด, จังหวัด+ราคาขั้นต่ำ, ไม่พบผลลัพธ์
+- [x] แสดงเบอร์ 2 จังหวะ → `tel:` จริง, LINE → line.me, sticky bar ชิดล่างพอดีบนมือถือ 375px, report → ลง DB จริง
+- [x] JSON-LD + title pattern + gallery + ประกาศใกล้เคียง แสดงครบ
+- สิ่งที่ยังไม่ได้วัด: Lighthouse mobile ≥85 (เกณฑ์ M6) — ควรวัดตอน deploy จริงบน Vercel (dev server วัดไม่ตรง)
+
+### Next step (M8 — บทความ + CMS)
+
+- `/admin/articles` CMS (Markdown + preview + รูปปก + publish), `/articles` + `[slug]` (ISR 1 ชม., JSON-LD Article, บทความเกี่ยวข้อง, CTA ไปหมวดประกาศ)
+- **งานของคุณ:** คัดสคริปต์ YouTube 15-20 เรื่องที่จะแปลงเป็นบทความ (Claude ช่วยแปลงได้) + งานค้างเดิม (LINE/Google port 3000, R2)
 
 ---
 

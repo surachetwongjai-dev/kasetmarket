@@ -1,32 +1,61 @@
-// Admin panel — โครงหน้า (เนื้อหาจริงมาใน M7: คิวอนุมัติ, จัดการ user, รายงาน, CMS)
-// role-gated: middleware กัน non-ADMIN แล้ว + ตรวจซ้ำฝั่ง server
+// Admin ภาพรวม — ตัวเลขวันนี้ + ทางลัด (M7)
 
 import type { Metadata } from "next";
-import { redirect } from "next/navigation";
-import { auth } from "@/features/auth";
+import Link from "next/link";
+import { getAdminStats } from "@/features/moderation/queries";
 
 export const metadata: Metadata = {
   title: "ผู้ดูแลระบบ",
 };
 
 export default async function AdminPage() {
-  const session = await auth();
-  if (!session) redirect("/login");
-  if (session.user.role !== "ADMIN") redirect("/dashboard");
+  const stats = await getAdminStats();
+
+  const cards = [
+    {
+      label: "ประกาศรออนุมัติ",
+      value: stats.pendingListings,
+      href: "/admin/moderation",
+      urgent: stats.pendingListings > 0,
+    },
+    {
+      label: "รายงานค้างตรวจ",
+      value: stats.openReports,
+      href: "/admin/reports",
+      urgent: stats.openReports > 0,
+    },
+    {
+      label: "ประกาศใหม่วันนี้",
+      value: stats.listingsToday,
+      href: "/admin/listings",
+    },
+    {
+      label: "สมาชิกใหม่วันนี้",
+      value: stats.usersToday,
+      href: "/admin/users",
+    },
+  ];
 
   return (
-    <main className="mx-auto w-full max-w-5xl px-4 py-8">
-      <h1 className="font-heading text-2xl font-bold text-primary-dk">
-        ผู้ดูแลระบบ
-      </h1>
-      <p className="mt-1 text-muted-foreground">
-        เข้าสู่ระบบในฐานะ {session.user.name}
-      </p>
-
-      <div className="mt-8 rounded-xl border border-dashed border-border bg-card p-8 text-center text-muted-foreground">
-        แผงควบคุมแอดมินจะมาใน M7 — คิวอนุมัติประกาศ จัดการผู้ใช้ รายงาน และ CMS
-        บทความ
-      </div>
-    </main>
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      {cards.map((card) => (
+        <Link
+          key={card.label}
+          href={card.href}
+          className={`flex flex-col rounded-xl border p-4 transition-colors hover:bg-muted ${
+            card.urgent
+              ? "border-accent/50 bg-accent/5"
+              : "border-border bg-card"
+          }`}
+        >
+          <span className="font-num text-3xl font-bold">
+            {card.value.toLocaleString("th-TH")}
+          </span>
+          <span className="mt-1 text-sm text-muted-foreground">
+            {card.label}
+          </span>
+        </Link>
+      ))}
+    </div>
   );
 }

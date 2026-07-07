@@ -69,8 +69,11 @@ export async function createListingAction(
   // user ที่ verified แล้ว → ACTIVE ทันที, ยังไม่ verified → เข้าคิวรออนุมัติ (CLAUDE.md §8)
   const user = await prisma.user.findUniqueOrThrow({
     where: { id: session.user.id },
-    select: { verified: true },
+    select: { verified: true, banned: true },
   });
+  if (user.banned) {
+    return { error: "บัญชีของคุณถูกระงับการใช้งาน — ติดต่อแอดมินหากมีข้อสงสัย" };
+  }
   const status = user.verified ? "ACTIVE" : "PENDING";
 
   const { images, district, contactPhone, contactLine, ...fields } =
@@ -127,7 +130,7 @@ export async function updateListingAction(
 
   const listing = await prisma.listing.findUnique({
     where: { id: listingId },
-    select: { sellerId: true, slug: true },
+    select: { sellerId: true, slug: true, status: true },
   });
   if (!listing || listing.sellerId !== session.user.id) {
     return { error: "ไม่พบประกาศ หรือคุณไม่ใช่เจ้าของประกาศนี้" };
@@ -143,6 +146,10 @@ export async function updateListingAction(
       district: district || null,
       contactPhone: contactPhone || null,
       contactLine: contactLine || null,
+      // ประกาศที่โดน reject → แก้ไขแล้วกลับเข้าคิวตรวจใหม่ (สถานะอื่นคงเดิม)
+      ...(listing.status === "REJECTED"
+        ? { status: "PENDING" as const, rejectReason: null }
+        : {}),
       images: {
         deleteMany: {}, // แทนที่รูปทั้งชุดตามลำดับใหม่จากฟอร์ม
         create: images.map((img, i) => ({ url: img.url, order: i })),

@@ -95,6 +95,11 @@ export default async function MyListingsPage({
                   </p>
                 </div>
               </div>
+              {listing.status === "REJECTED" && listing.rejectReason && (
+                <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                  เหตุผลที่ไม่ผ่าน: {listing.rejectReason} — แก้ไขประกาศแล้วระบบจะส่งเข้าคิวตรวจใหม่
+                </p>
+              )}
               <ListingRowActions id={listing.id} status={listing.status} />
             </li>
           ))}

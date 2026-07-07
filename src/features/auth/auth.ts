@@ -27,6 +27,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         });
         // user ที่สมัครผ่าน OAuth จะไม่มี passwordHash → ล็อกอินด้วยรหัสผ่านไม่ได้
         if (!user?.passwordHash) return null;
+        if (user.banned) return null; // โดนแบน — ล็อกอินไม่ได้ (M7)
 
         const valid = await bcrypt.compare(
           parsed.data.password,
@@ -38,6 +39,20 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       },
     }),
   ],
+  callbacks: {
+    ...authConfig.callbacks,
+    // กัน user ที่โดนแบนล็อกอินผ่าน OAuth (credentials เช็คใน authorize แล้ว)
+    async signIn({ user }) {
+      if (user?.id) {
+        const dbUser = await prisma.user.findUnique({
+          where: { id: user.id },
+          select: { banned: true },
+        });
+        if (dbUser?.banned) return false; // เด้งไป /login?error=AccessDenied
+      }
+      return true;
+    },
+  },
   events: {
     // เก็บ LINE user id ลง User.lineUserId (ใช้อ้างอิง/ติดต่อภายหลัง)
     async signIn({ user, account }) {
