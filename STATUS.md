@@ -2,8 +2,38 @@
 
 > อัปเดตหลังจบทุก milestone — session ใหม่อ่านไฟล์นี้คู่กับ CLAUDE.md + PLAN.md
 
-- **Milestone ปัจจุบัน:** M8 เสร็จแล้ว ✅ — พร้อมเริ่ม M9 (หน้าแรก + โปรไฟล์ผู้ขาย + Sitemap)
+- **Milestone ปัจจุบัน:** M9 เสร็จแล้ว ✅ — พร้อมเริ่ม M10 (Polish + ทดสอบรวม)
 - **อัปเดตล่าสุด:** 2026-07-07
+
+---
+
+## M9: หน้าแรก + โปรไฟล์ผู้ขาย + Sitemap ✅ (2026-07-07)
+
+### สิ่งที่ทำ
+
+- **หน้าแรก** (Server Component, revalidate 300): hero + ช่องค้นหาใหญ่, แถบหมวด 10 หมวดพร้อม emoji icon (เพิ่ม `icon` ใน `config/categories.ts`), ประกาศเด่น, ประกาศล่าสุด 12, บทความล่าสุด 3, **แถบ YouTube** (แสดงเมื่อตั้ง `NEXT_PUBLIC_YOUTUBE_URL` — ตอนนี้ซ่อนอยู่ ไม่มี dead link)
+- **`/sellers/[id]`** (ISR 300s): avatar, badge ยืนยัน, จังหวัด, วันเข้าร่วม, ประกาศ ACTIVE ทั้งหมด — ลิงก์จากชื่อผู้ขายในหน้าประกาศ
+- **`sitemap.xml`** (`app/sitemap.ts`, revalidate 1 ชม.): static 6 + ประกาศ ACTIVE ทุกรายการ + บทความ published ทุกเรื่อง · **`robots.txt`** (`app/robots.ts`): allow ทั้งหมด ยกเว้น /dashboard /admin /api /login /register + ชี้ sitemap
+- **หน้า static** พร้อมร่างเนื้อหา: `/about`, `/privacy` (PDPA — เก็บ/ใช้/เปิดเผย/สิทธิเจ้าของข้อมูล), `/terms` (บทบาทแพลตฟอร์ม/ความรับผิดชอบ/จำกัดความรับผิด) — **มีหมายเหตุชัดว่าเป็นร่าง ต้องให้ผู้เชี่ยวชาญกฎหมายตรวจก่อน launch (M11)**
+- **404 / error / loading**: `app/not-found.tsx`, `app/error.tsx` (client), loading skeleton หน้า `/listings` + `/articles` (+ `ListingCardSkeleton`)
+- `config/site.ts`: `SITE_URL` (จาก `NEXT_PUBLIC_SITE_URL`), `YOUTUBE_CHANNEL_URL`
+
+### ทดสอบแล้ว (E2E)
+
+- [x] หน้าแรกครบทุก section, **ไม่มี dead link จาก 32 ลิงก์** (เกณฑ์ตรวจรับ), footer /about /privacy /terms ทั้งหมด 200
+- [x] **sitemap.xml = 22 URL: 13 ประกาศ ACTIVE + 3 บทความ published + 6 static** (เกณฑ์ตรวจรับผ่าน), robots ชี้ sitemap + กัน /admin
+- [x] โปรไฟล์ผู้ขาย: badge + วันเข้าร่วม + 6 ประกาศ ACTIVE, seller ที่ไม่มีจริง → 404
+- [x] หน้าแรกมือถือ 375px: ไม่มี h-scroll, หมวด 3 คอลัมน์, การ์ด 2 คอลัมน์, `npm run build` ผ่าน
+
+### ⚠️ ข้อสังเกต/ความเสี่ยงที่ต้องตรวจตอน deploy (M10/M11)
+
+1. **Soft-404 ในโหมด dev:** หน้า `/listings/[slug]` และ `/articles/[slug]` ที่ไม่มีจริง เนื้อหา not-found แสดงถูกต้อง แต่ HTTP status คืน **200 แทน 404** ในโหมด dev — ขณะที่ `/sellers/[id]` (โค้ด `notFound()` pattern เดียวกันเป๊ะ) คืน 404 ถูกต้อง สรุปว่าเป็น **artifact ของ Next 15.5 + Turbopack dev** ไม่ใช่บั๊กโค้ด แต่ **ต้องยืนยัน status 404 บน production จริงตอน deploy** (soft-404 กระทบ SEO)
+2. **`next start` กับ turbopack build พัง:** รัน `npm start` (หลัง `build --turbopack`) เจอ `routesManifest.dataRoutes is not iterable` — ทดสอบ production ในเครื่องไม่ได้ **Vercel deploy ไม่ได้ใช้ `next start` ตรงๆ จึงน่าจะไม่กระทบ** แต่ต้องเฝ้าดูตอน M11 (ถ้าจะรัน self-host ต้องพิจารณาถอด `--turbopack` ออกจาก build script)
+
+### Next step (M10 — Polish + QA)
+
+- Responsive 360–1440px ทุกหน้า, empty states, error handling อัปรูป/network, a11y (focus ring/alt/contrast), ตรวจ N+1, **ยืนยัน 404 status บน prod**
+- งานผู้ใช้ค้าง: LINE/Google (port 3000), R2, ตั้ง `NEXT_PUBLIC_SITE_URL` + `NEXT_PUBLIC_YOUTUBE_URL`, เตรียมบทความจริง
 
 ---
 

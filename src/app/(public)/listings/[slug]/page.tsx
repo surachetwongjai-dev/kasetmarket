@@ -128,7 +128,10 @@ export default async function ListingDetailPage({ params }: Props) {
 
         {/* ข้อมูลผู้ขาย + ปุ่มติดต่อ (desktop: sidebar / mobile: sticky ล่าง) */}
         <aside className="flex flex-col gap-3">
-          <div className="rounded-xl border border-border bg-card p-4">
+          <Link
+            href={`/sellers/${listing.seller.id}`}
+            className="block rounded-xl border border-border bg-card p-4 transition-colors hover:bg-muted"
+          >
             <h2 className="text-sm font-medium text-muted-foreground">ผู้ขาย</h2>
             <p className="mt-1 flex items-center gap-1.5 font-medium">
               {listing.seller.name}
@@ -145,7 +148,10 @@ export default async function ListingDetailPage({ params }: Props) {
               {listing.seller.province ? `${listing.seller.province} · ` : ""}
               สมาชิกตั้งแต่ {formatThaiDate(listing.seller.createdAt)}
             </p>
-          </div>
+            <p className="mt-1.5 text-xs font-medium text-primary">
+              ดูประกาศทั้งหมดของผู้ขาย →
+            </p>
+          </Link>
 
           <ContactButtons
             phone={listing.contactPhone}

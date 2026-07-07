@@ -149,3 +149,59 @@ export async function getRelatedListings(listing: {
   });
   return [...sameProvince, ...others];
 }
+
+// ---------- หน้าแรก (M9) ----------
+
+/** ประกาศเด่นสำหรับหน้าแรก */
+export async function getFeaturedListings(limit = 4) {
+  return prisma.listing.findMany({
+    where: { ...publicWhere(), featured: true },
+    orderBy: { createdAt: "desc" },
+    take: limit,
+    include: { images: { orderBy: { order: "asc" }, take: 1 } },
+  });
+}
+
+/** ประกาศล่าสุดสำหรับหน้าแรก */
+export async function getLatestListings(limit = 12) {
+  return prisma.listing.findMany({
+    where: publicWhere(),
+    orderBy: { createdAt: "desc" },
+    take: limit,
+    include: { images: { orderBy: { order: "asc" }, take: 1 } },
+  });
+}
+
+// ---------- โปรไฟล์ผู้ขาย (M9) ----------
+
+export async function getSellerProfile(id: string) {
+  return prisma.user.findUnique({
+    where: { id },
+    select: {
+      id: true,
+      name: true,
+      image: true,
+      province: true,
+      verified: true,
+      createdAt: true,
+    },
+  });
+}
+
+/** ประกาศ ACTIVE ทั้งหมดของผู้ขาย (โปรไฟล์สาธารณะ) */
+export async function getSellerActiveListings(sellerId: string) {
+  return prisma.listing.findMany({
+    where: { ...publicWhere(), sellerId },
+    orderBy: { createdAt: "desc" },
+    include: { images: { orderBy: { order: "asc" }, take: 1 } },
+  });
+}
+
+/** slug ประกาศ ACTIVE ทั้งหมด (sitemap) */
+export async function getAllActiveListingSlugs() {
+  return prisma.listing.findMany({
+    where: publicWhere(),
+    select: { slug: true, updatedAt: true },
+    orderBy: { updatedAt: "desc" },
+  });
+}

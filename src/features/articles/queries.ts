@@ -61,3 +61,12 @@ export async function getAllArticlesForAdmin() {
 export async function getArticleForEdit(id: string) {
   return prisma.article.findUnique({ where: { id } });
 }
+
+/** slug บทความ published ทั้งหมด (sitemap) */
+export async function getAllPublishedArticleSlugs() {
+  return prisma.article.findMany({
+    where: { published: true },
+    select: { slug: true, publishedAt: true },
+    orderBy: { publishedAt: "desc" },
+  });
+}
