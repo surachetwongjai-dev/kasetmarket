@@ -5,6 +5,7 @@ export const metadata: Metadata = {
   title: "เกี่ยวกับเรา",
   description:
     "KasetMarket ตลาดกลางซื้อขายสินค้าเกษตรออนไลน์ ให้เกษตรกรลงประกาศขายฟรี ผู้ซื้อติดต่อผู้ขายโดยตรง",
+  alternates: { canonical: "/about" },
 };
 
 export default function AboutPage() {

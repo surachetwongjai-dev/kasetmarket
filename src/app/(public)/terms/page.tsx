@@ -4,6 +4,7 @@ export const metadata: Metadata = {
   title: "ข้อตกลงการใช้งาน",
   description:
     "ข้อตกลงและเงื่อนไขการใช้งานเว็บไซต์ KasetMarket ตลาดกลางซื้อขายสินค้าเกษตร",
+  alternates: { canonical: "/terms" },
 };
 
 // ⚠️ ร่างเบื้องต้น (M9) — ต้องให้ผู้เชี่ยวชาญกฎหมายตรวจก่อนเปิดใช้จริง (M11)

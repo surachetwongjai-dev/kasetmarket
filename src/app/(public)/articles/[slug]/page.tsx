@@ -28,10 +28,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: article.title,
     description,
+    alternates: { canonical: `/articles/${slug}` },
     openGraph: {
       title: article.title,
       description,
       type: "article",
+      siteName: "KasetMarket",
       publishedTime: article.publishedAt?.toISOString(),
       images: article.coverUrl ? [{ url: article.coverUrl }] : undefined,
     },

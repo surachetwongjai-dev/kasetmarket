@@ -18,6 +18,8 @@ export const metadata: Metadata = {
 
   description:
     "รวมประกาศขายสินค้าเกษตรทั่วไทย ข้าว ผัก ผลไม้ ปุ๋ย เครื่องจักร ที่ดิน ติดต่อผู้ขายตรง ไม่ผ่านคนกลาง",
+  // canonical ชี้ base เสมอ — รวม filter param (?category=/?province=/?q=/?page=) ให้เป็นหน้าเดียว กัน duplicate content
+  alternates: { canonical: "/listings" },
 };
 
 function toNumber(value?: string): number | undefined {

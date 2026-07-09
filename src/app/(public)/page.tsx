@@ -11,7 +11,7 @@ import { getPublishedArticles } from "@/features/articles/queries";
 import { ListingCard } from "@/features/listings/components/listing-card";
 import { ArticleCard } from "@/features/articles/components/article-card";
 import { CATEGORIES } from "@/config/categories";
-import { YOUTUBE_CHANNEL_URL } from "@/config/site";
+import { SITE_NAME, SITE_URL, YOUTUBE_CHANNEL_URL } from "@/config/site";
 
 export const revalidate = 300;
 
@@ -19,6 +19,39 @@ export const metadata: Metadata = {
   title: "KasetMarket — ตลาดสินค้าเกษตร จากมือเกษตรกรถึงคุณ",
   description:
     "ลงประกาศขายสินค้าเกษตรฟรี ข้าว ผัก ผลไม้ ปุ๋ย เครื่องจักร ที่ดิน ผู้ซื้อติดต่อผู้ขายโดยตรง พร้อมคลังบทความความรู้เกษตร",
+  alternates: { canonical: "/" },
+};
+
+// WebSite + Organization schema — ช่วย Google เข้าใจแบรนด์ + เปิดโอกาส sitelinks search box
+const siteJsonLd = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": `${SITE_URL}/#organization`,
+      name: SITE_NAME,
+      url: SITE_URL,
+      description:
+        "ตลาดกลางซื้อขายสินค้าเกษตรออนไลน์ ลงประกาศฟรี พร้อมคลังบทความความรู้เกษตร",
+      ...(YOUTUBE_CHANNEL_URL ? { sameAs: [YOUTUBE_CHANNEL_URL] } : {}),
+    },
+    {
+      "@type": "WebSite",
+      "@id": `${SITE_URL}/#website`,
+      name: SITE_NAME,
+      url: SITE_URL,
+      inLanguage: "th-TH",
+      publisher: { "@id": `${SITE_URL}/#organization` },
+      potentialAction: {
+        "@type": "SearchAction",
+        target: {
+          "@type": "EntryPoint",
+          urlTemplate: `${SITE_URL}/listings?q={search_term_string}`,
+        },
+        "query-input": "required name=search_term_string",
+      },
+    },
+  ],
 };
 
 export default async function HomePage() {
@@ -30,6 +63,10 @@ export default async function HomePage() {
 
   return (
     <div className="mx-auto max-w-6xl px-4">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(siteJsonLd) }}
+      />
       {/* Hero + ค้นหา */}
       <section className="py-8 text-center sm:py-12">
         <h1 className="font-heading text-3xl leading-tight font-bold text-primary-dk sm:text-4xl">

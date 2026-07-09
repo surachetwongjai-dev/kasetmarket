@@ -12,6 +12,7 @@ export const metadata: Metadata = {
   title: "บทความความรู้เกษตร",
   description:
     "รวมบทความความรู้การเกษตร เทคนิคปลูกพืช การใช้ปุ๋ย ป้องกันโรคพืช และข่าวสารเกษตร สำหรับเกษตรกรไทย",
+  alternates: { canonical: "/articles" },
 };
 
 export default async function ArticlesPage({

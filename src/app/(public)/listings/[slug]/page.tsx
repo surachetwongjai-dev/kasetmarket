@@ -34,10 +34,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title, // layout เติม "| KasetMarket" ให้จาก title.template
     description,
+    alternates: { canonical: `/listings/${slug}` },
     openGraph: {
       title,
       description,
       type: "website",
+      siteName: "KasetMarket",
       images: listing.images[0] ? [{ url: listing.images[0].url }] : undefined,
     },
   };
