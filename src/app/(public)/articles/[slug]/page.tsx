@@ -9,10 +9,12 @@ import {
   getRelatedArticles,
 } from "@/features/articles/queries";
 import { ArticleCard } from "@/features/articles/components/article-card";
+import { YoutubeEmbed } from "@/features/articles/components/youtube-embed";
 import { ViewTracker } from "@/features/listings/components/view-tracker";
 import { relatedListingCategoryOf } from "@/config/articleCategories";
 import { getCategoryLabel } from "@/config/categories";
 import { renderMarkdown, stripMarkdown } from "@/lib/markdown";
+import { getYouTubeId, youtubeThumb, youtubeEmbedUrl } from "@/lib/youtube";
 import { formatThaiDate } from "@/lib/format";
 
 export const revalidate = 3600;
@@ -62,12 +64,33 @@ export default async function ArticleDetailPage({ params }: Props) {
     publisher: { "@type": "Organization", name: "KasetMarket" },
   };
 
+  // VideoObject — โอกาสขึ้น video rich result ใน Google (ต้องมี uploadDate)
+  const videoId = getYouTubeId(article.youtubeUrl);
+  const videoJsonLd = videoId
+    ? {
+        "@context": "https://schema.org",
+        "@type": "VideoObject",
+        name: article.title,
+        description: article.excerpt,
+        thumbnailUrl: [youtubeThumb(videoId)],
+        uploadDate: article.videoUploadedAt?.toISOString(),
+        embedUrl: youtubeEmbedUrl(videoId),
+        contentUrl: article.youtubeUrl,
+      }
+    : null;
+
   return (
     <main className="mx-auto w-full max-w-3xl px-4 py-6">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
+      {videoJsonLd && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(videoJsonLd) }}
+        />
+      )}
       <ViewTracker
         endpoint={`/api/articles/${article.id}/view`}
         dedupeKey={`article:${article.id}`}
@@ -109,6 +132,10 @@ export default async function ArticleDetailPage({ params }: Props) {
               className="object-cover"
             />
           </div>
+        )}
+
+        {article.youtubeUrl && (
+          <YoutubeEmbed url={article.youtubeUrl} title={article.title} />
         )}
 
         <div

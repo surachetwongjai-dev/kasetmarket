@@ -103,16 +103,18 @@ model ListingImage {
 }
 
 model Article {
-  id          String    @id @default(cuid())
-  slug        String    @unique
-  title       String
-  excerpt     String
-  content     String    @db.Text // Markdown
-  coverUrl    String?
-  category    String // ปุ๋ย/โรคพืช/ราคาตลาด/เทคนิค/ข่าวเกษตร
-  published   Boolean   @default(false)
-  publishedAt DateTime?
-  views       Int       @default(0)
+  id              String    @id @default(cuid())
+  slug            String    @unique
+  title           String
+  excerpt         String
+  content         String    @db.Text // Markdown
+  coverUrl        String?
+  category        String // ปุ๋ย/โรคพืช/ราคาตลาด/เทคนิค/ข่าวเกษตร
+  youtubeUrl      String? // คลิปต้นทาง — ฝัง embed + VideoObject JSON-LD ในหน้าบทความ
+  videoUploadedAt DateTime? // วันอัปโหลดคลิป (uploadDate ใน VideoObject)
+  published       Boolean   @default(false)
+  publishedAt     DateTime?
+  views           Int       @default(0)
 }
 
 model Report {
