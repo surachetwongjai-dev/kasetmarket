@@ -5,6 +5,7 @@ import {
   IBM_Plex_Sans_Thai_Looped,
 } from "next/font/google";
 import "./globals.css";
+import { Providers } from "@/components/providers";
 import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
 
@@ -51,9 +52,11 @@ export default function RootLayout({
       className={`${anuphan.variable} ${plexThai.variable} ${plexSans.variable}`}
     >
       <body className="flex min-h-svh flex-col antialiased">
-        <SiteHeader />
-        <main className="flex-1">{children}</main>
-        <SiteFooter />
+        <Providers>
+          <SiteHeader />
+          <main className="flex-1">{children}</main>
+          <SiteFooter />
+        </Providers>
       </body>
     </html>
   );

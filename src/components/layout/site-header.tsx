@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import { HeaderAuth } from "@/components/layout/header-auth";
 
 const NAV_LINKS = [
   { href: "/listings", label: "ประกาศขาย" },
@@ -32,17 +32,8 @@ export function SiteHeader() {
           ))}
         </nav>
 
-        <div className="ml-auto flex items-center gap-2">
-          {/* ปุ่มชี้ไป /login ก่อน — dashboard/auth มาใน M3/M5 */}
-          <Button variant="ghost" className="min-h-10 px-2 sm:px-4" asChild>
-            <Link href="/login">เข้าสู่ระบบ</Link>
-          </Button>
-          <Button className="min-h-10" asChild>
-            <Link href="/login">
-              <span className="hidden sm:inline">+ </span>ลงประกาศฟรี
-            </Link>
-          </Button>
-        </div>
+        {/* ปุ่มฝั่งขวาขึ้นกับสถานะล็อกอิน (client) — คง ISR ของหน้า public ไว้ */}
+        <HeaderAuth />
       </div>
 
       {/* nav บนมือถือ */}
