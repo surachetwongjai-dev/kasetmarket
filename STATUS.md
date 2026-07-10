@@ -2,8 +2,32 @@
 
 > อัปเดตหลังจบทุก milestone — session ใหม่อ่านไฟล์นี้คู่กับ CLAUDE.md + PLAN.md
 
-- **Milestone ปัจจุบัน:** M10 เสร็จแล้ว ✅ — พร้อมเริ่ม M11 (Deploy Production)
-- **อัปเดตล่าสุด:** 2026-07-07
+- **Milestone ปัจจุบัน:** M11 (Deploy Production) — ส่วนโค้ดเสร็จแล้ว ⏳ เหลืองานฝั่งผู้ใช้ (โดเมน, env จริง, deploy)
+- **อัปเดตล่าสุด:** 2026-07-10
+
+---
+
+## M11: Deploy Production ⏳ (ส่วนโค้ดเสร็จ 2026-07-10 — รอ deploy จริง)
+
+### สิ่งที่ทำ (ส่วนโค้ด)
+
+- **Session-aware header** (`0d0a6d8`): แสดงเมนูบัญชีเมื่อล็อกอิน ผ่าน client component + SessionProvider — หน้า public ยังคง ISR (ไม่เรียก `auth()` ใน layout ตามที่ตั้งใจไว้ตั้งแต่ M3)
+- **SEO quick-wins** (`b349e29`): canonical URL ทุกหน้า public, default OG image (`app/opengraph-image.tsx`), structured data เพิ่มเติมบนหน้าแรก
+- **ฝังวิดีโอ YouTube ในบทความ + Video SEO** (`e6c4c93`): `Article.videoId` (migration `20260709000000_add_article_video`), `<YouTubeEmbed>` (facade — โหลด iframe เมื่อกด play), JSON-LD `VideoObject`, script backfill/insert-drafts/verify-drafts ใน `prisma/`
+- **Env validation ก่อน build** (สเปค M11 ใน PLAN.md): `scripts/check-env.ts` รันอัตโนมัติผ่าน `prebuild` — dev บังคับแค่ `DATABASE_URL`+`AUTH_SECRET` (+ R2 ต้องครบ 5 หรือไม่ใส่เลย), บน Vercel/`CHECK_ENV_STRICT=1` บังคับครบชุด production (LINE/Google, R2, SITE_URL ต้องไม่ใช่ localhost); เพิ่ม `NEXT_PUBLIC_SITE_URL`/`NEXT_PUBLIC_YOUTUBE_URL` ลง `.env.sample` แล้ว
+- **Security headers** ใน `next.config.ts`: nosniff, X-Frame-Options DENY, Referrer-Policy, Permissions-Policy, HSTS — ยังไม่ใส่ CSP เต็ม (เสี่ยงชน inline script ของ Next + YouTube embed ค่อยพิจารณาหลัง launch)
+- **กัน picsum บน prod**: hostname ของ picsum (รูป seed) อนุญาตเฉพาะนอก Vercel
+
+### งานที่เหลือ (ฝั่งคุณ — โค้ดพร้อมแล้ว)
+
+- [ ] ซื้อโดเมน → ต่อ Vercel → ใส่ env ทั้งหมด (check-env จะ fail build ถ้าขาด)
+- [ ] เปลี่ยน LINE/Google callback URL เป็นโดเมนจริง + **ทดสอบ OAuth จริงครั้งแรก** (ค้างตั้งแต่ M3)
+- [ ] สมัคร R2 + ใส่ 5 ค่า (production บังคับ)
+- [ ] Migrate + seed ข้อมูลจริง (บทความ 15-20 เรื่อง, ประกาศตั้งต้น 10-20 รายการ)
+- [ ] บนโดเมนจริง: ยืนยัน soft-404 (ดูโน้ต M10), วัด Lighthouse mobile ≥85, flow เต็มจากมือถือ 4G
+- [ ] ให้ผู้เชี่ยวชาญกฎหมายตรวจร่าง /privacy /terms ก่อนเปิดจริง
+- [ ] Google Search Console submit sitemap + ตั้ง Umami/Plausible
+- [ ] เสร็จหมด → tag `v1.0.0` → เริ่ม M12 (Launch กับฐาน YouTube)
 
 ---
 
