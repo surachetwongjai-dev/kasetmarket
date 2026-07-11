@@ -2,6 +2,11 @@
 
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import {
+  listingCategoriesOfShop,
+  shopCategoriesForListingCategory,
+} from "@/config/shopCategories";
+import { ARTICLE_CATEGORIES } from "@/config/articleCategories";
 
 export const SHOPS_PAGE_SIZE = 24;
 
@@ -115,6 +120,75 @@ export async function getApprovedShopBySlug(slug: string) {
   return prisma.shop.findFirst({
     where: { ...APPROVED_WHERE, slug },
     include: { images: { orderBy: { order: "asc" } } },
+  });
+}
+
+// ---------- Cross-link สองทาง (D3) — ทุก query ผ่าน mapping ใน config/shopCategories.ts ----------
+
+/** บล็อก "ร้านค้า-ตัวแทนจำหน่ายใกล้คุณ" บนหน้าประกาศ: หมวด mapping ตรง + จังหวัดเดียวกัน */
+export async function getShopsForListing(
+  listingCategory: string,
+  province: string,
+  limit = 4,
+) {
+  const shopCategories = shopCategoriesForListingCategory(listingCategory);
+  if (shopCategories.length === 0) return [];
+  return prisma.shop.findMany({
+    where: {
+      ...APPROVED_WHERE,
+      province,
+      categories: { hasSome: shopCategories },
+    },
+    orderBy: SHOP_ORDER,
+    take: limit,
+    include: CARD_INCLUDE,
+  });
+}
+
+/** บล็อก "ประกาศขายในพื้นที่นี้" บนหน้าร้าน: ประกาศ ACTIVE หมวด mapping + จังหวัดเดียวกัน */
+export async function getListingsNearShop(
+  shop: { categories: string[]; province: string },
+  limit = 4,
+) {
+  const categories = listingCategoriesOfShop(shop.categories);
+  if (categories.length === 0) return [];
+  return prisma.listing.findMany({
+    // กติกา §8: ประกาศต่อสาธารณะต้อง ACTIVE + ยังไม่หมดอายุเสมอ
+    where: {
+      status: "ACTIVE",
+      expiresAt: { gt: new Date() },
+      category: { in: categories },
+      province: shop.province,
+    },
+    orderBy: [{ featured: "desc" }, { createdAt: "desc" }],
+    take: limit,
+    include: { images: { orderBy: { order: "asc" }, take: 1 } },
+  });
+}
+
+/** บทความ published ในหมวดที่ map กับหมวดประกาศที่กำหนด (หน้าร้าน + หน้าหมวด directory) */
+export async function getArticlesForListingCategories(
+  listingCategories: string[],
+  limit = 3,
+) {
+  const articleCategories = ARTICLE_CATEGORIES.filter(
+    (a) =>
+      a.relatedListingCategory &&
+      listingCategories.includes(a.relatedListingCategory),
+  ).map((a) => a.value);
+  if (articleCategories.length === 0) return [];
+  return prisma.article.findMany({
+    where: { published: true, category: { in: articleCategories } },
+    orderBy: { publishedAt: "desc" },
+    take: limit,
+    select: {
+      slug: true,
+      title: true,
+      excerpt: true,
+      coverUrl: true,
+      category: true,
+      publishedAt: true,
+    },
   });
 }
 

@@ -7,6 +7,9 @@ export {
   getShopsByProvinceCategory,
   getApprovedShopBySlug,
   getAllApprovedShops,
+  getShopsForListing,
+  getListingsNearShop,
+  getArticlesForListingCategories,
 } from "./queries";
 export { ShopCard } from "./components/shop-card";
 export { ShopFilters } from "./components/shop-filters";

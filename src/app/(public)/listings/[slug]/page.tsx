@@ -14,6 +14,8 @@ import { ContactButtons } from "@/features/listings/components/contact-buttons";
 import { PriceTag } from "@/features/listings/components/price-tag";
 import { ViewTracker } from "@/features/listings/components/view-tracker";
 import { ReportButton } from "@/features/moderation/components/report-button";
+import { getShopsForListing } from "@/features/directory/queries";
+import { ShopCard } from "@/features/directory/components/shop-card";
 import { getCategoryLabel } from "@/config/categories";
 import { getUnitLabel } from "@/config/units";
 import { formatPrice, formatThaiDate, formatTimeAgo } from "@/lib/format";
@@ -50,7 +52,11 @@ export default async function ListingDetailPage({ params }: Props) {
   const listing = await getActiveListingBySlug(decodeURIComponent(slug));
   if (!listing) notFound();
 
-  const related = await getRelatedListings(listing);
+  const [related, nearbyShops] = await Promise.all([
+    getRelatedListings(listing),
+    // cross-link directory (D3): ร้านหมวดเกี่ยวข้อง + จังหวัดเดียวกัน สูงสุด 4
+    getShopsForListing(listing.category, listing.province),
+  ]);
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -175,6 +181,19 @@ export default async function ListingDetailPage({ params }: Props) {
           <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
             {related.map((item) => (
               <ListingCard key={item.id} listing={item} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {nearbyShops.length > 0 && (
+        <section className="mt-10">
+          <h2 className="font-heading text-lg font-semibold text-primary-dk">
+            ร้านค้า-ตัวแทนจำหน่ายใกล้คุณ
+          </h2>
+          <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {nearbyShops.map((shop) => (
+              <ShopCard key={shop.id} shop={shop} />
             ))}
           </div>
         </section>

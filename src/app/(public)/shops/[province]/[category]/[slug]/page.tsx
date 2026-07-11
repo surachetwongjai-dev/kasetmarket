@@ -4,7 +4,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getApprovedShopBySlug } from "@/features/directory/queries";
+import {
+  getApprovedShopBySlug,
+  getListingsNearShop,
+  getArticlesForListingCategories,
+} from "@/features/directory/queries";
 import {
   DIRECTORY_BASE,
   provincePath,
@@ -13,9 +17,12 @@ import {
 } from "@/features/directory/paths";
 import { ListingGallery } from "@/features/listings/components/listing-gallery";
 import { ContactButtons } from "@/features/listings/components/contact-buttons";
+import { ListingCard } from "@/features/listings/components/listing-card";
+import { ArticleCard } from "@/features/articles/components/article-card";
 import {
   getShopCategory,
   shopCategoryBySlug,
+  listingCategoriesOfShop,
 } from "@/config/shopCategories";
 
 export const revalidate = 3600;
@@ -58,6 +65,12 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
 
 export default async function ShopProfilePage(props: Props) {
   const { shop, category } = await resolveShop(props);
+
+  // cross-link (D3): ประกาศ+บทความ ผ่าน mapping หมวดร้าน↔หมวดประกาศใน config เท่านั้น
+  const [nearbyListings, relatedArticles] = await Promise.all([
+    getListingsNearShop(shop),
+    getArticlesForListingCategories(listingCategoriesOfShop(shop.categories)),
+  ]);
 
   const mapsHref =
     shop.lat != null && shop.lng != null
@@ -186,6 +199,40 @@ export default async function ShopProfilePage(props: Props) {
           </p>
         </aside>
       </div>
+
+      {nearbyListings.length > 0 && (
+        <section className="mt-10">
+          <div className="flex items-baseline justify-between gap-2">
+            <h2 className="font-heading text-lg font-semibold text-primary-dk">
+              ประกาศขายในพื้นที่นี้
+            </h2>
+            <Link
+              href={`/listings?province=${shop.province}`}
+              className="shrink-0 text-sm font-medium text-primary hover:underline"
+            >
+              ดูทั้งหมด →
+            </Link>
+          </div>
+          <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {nearbyListings.map((item) => (
+              <ListingCard key={item.id} listing={item} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {relatedArticles.length > 0 && (
+        <section className="mt-10">
+          <h2 className="font-heading text-lg font-semibold text-primary-dk">
+            บทความเกษตรที่เกี่ยวข้อง
+          </h2>
+          <div className="mt-3 grid gap-3 sm:grid-cols-3">
+            {relatedArticles.map((article) => (
+              <ArticleCard key={article.slug} article={article} />
+            ))}
+          </div>
+        </section>
+      )}
     </main>
   );
 }
