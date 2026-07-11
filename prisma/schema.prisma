@@ -117,6 +117,49 @@ model Article {
   views           Int       @default(0)
 }
 
+// Directory ร้านค้า/ตัวแทนจำหน่ายเกษตร (Phase 1.5 — CLAUDE.md §10)
+enum ShopStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model Shop {
+  id          String      @id @default(cuid())
+  name        String
+  slug        String      @unique // SEO: /ร้านค้า/[จังหวัด]/[หมวด]/[slug]
+  description String      @db.Text
+  categories  String[] // value จาก config/shopCategories.ts (หลายหมวดได้)
+  province    String // ชื่อไทยตรงกับ config/provinces.ts (convention เดียวกับ Listing)
+  district    String?
+  address     String?
+  lat         Float?
+  lng         Float?
+  phone       String?
+  lineId      String?
+  facebookUrl String?
+  openHours   String? // text ง่ายๆ เช่น "จ-ส 8:00-17:00"
+  images      ShopImage[]
+  featured    Boolean     @default(false)
+  status      ShopStatus  @default(PENDING)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@unique([name, province]) // natural key ให้ seed CSV รันซ้ำได้ไม่ duplicate
+  @@index([province, status])
+  @@index([status])
+}
+
+model ShopImage {
+  id     String @id @default(cuid())
+  url    String
+  order  Int    @default(0)
+  shop   Shop   @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  shopId String
+
+  @@index([shopId])
+}
+
 model Report {
   id         String   @id @default(cuid())
   listing    Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
