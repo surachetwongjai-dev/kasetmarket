@@ -13,9 +13,9 @@
 - [ ] `npx prisma migrate deploy` แล้ว `npx prisma db seed` (รีเซ็ตข้อมูลเป็น seed สะอาด: user 4, ประกาศ 20, บทความ 3)
 - [ ] `npm run dev` → เปิด `http://localhost:3000` เห็นหน้าแรกมีประกาศ + ยืนยัน terminal ขึ้น port 3000 จริง (ไม่ใช่ 3001)
 
-### A1. OAuth — งานค้างตั้งแต่ M3 (สำคัญสุด ยังไม่เคยเทสจริง)
-- [ ] **LINE:** `/login` → กดปุ่ม LINE → อนุญาตในหน้า LINE → เด้งกลับเข้า `/dashboard` แสดงชื่อจาก LINE
-- [ ] **Google:** ออกจากระบบ → `/login` → กดปุ่ม Google → เลือกบัญชี → เด้งกลับ `/dashboard`
+### A1. OAuth — งานค้างตั้งแต่ M3 ✅ ผ่านแล้ว (2026-07-10)
+- [x] **LINE:** `/login` → กดปุ่ม LINE → อนุญาตในหน้า LINE → เด้งกลับเข้า `/dashboard` แสดงชื่อจาก LINE
+- [x] **Google:** ออกจากระบบ → `/login` → กดปุ่ม Google → เลือกบัญชี → เด้งกลับ `/dashboard`
 - [ ] เช็ค DB (`npx prisma studio`): user ใหม่ถูกสร้าง + มีแถวใน `Account` (OAuth linking) + role = SELLER
 - [ ] ล็อกอินซ้ำด้วยช่องทางเดิม → เข้าบัญชีเดิม (ไม่สร้าง user ซ้ำ)
 

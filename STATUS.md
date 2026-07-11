@@ -2,8 +2,27 @@
 
 > อัปเดตหลังจบทุก milestone — session ใหม่อ่านไฟล์นี้คู่กับ CLAUDE.md + PLAN.md
 
-- **Milestone ปัจจุบัน:** M11 (Deploy Production) — ส่วนโค้ดเสร็จแล้ว ⏳ เหลืองานฝั่งผู้ใช้ (โดเมน, env จริง, deploy)
-- **อัปเดตล่าสุด:** 2026-07-10
+- **Milestone ปัจจุบัน:** Phase 1.5 Directory ร้านค้า (D1–D6) — เริ่ม 2026-07-12 หลัง M11 (โค้ด) เสร็จและ deploy คืบหน้าบางส่วน
+- **อัปเดตล่าสุด:** 2026-07-12
+
+---
+
+## ความคืบหน้า Deploy หลัง M11 ⏳ (บันทึก 2026-07-12 จากหลักฐานในไฟล์)
+
+> Session ระหว่าง 2026-07-10 ถึง 12 มีงาน deploy คืบหน้าแต่ยังไม่ได้บันทึก/commit — สรุปจากหลักฐานที่ตรวจสอบได้ในเครื่อง:
+
+- ✅ **OAuth ผ่านแล้ว** (TESTING.md A1, 2026-07-10): LINE + Google login สำเร็จบน localhost:3000 — งานค้างตั้งแต่ M3 ปิดได้
+- ✅ **Production DB ตั้งแล้ว** (`.env.production.local` มี `DATABASE_URL`/`DIRECT_URL` แยกจาก dev)
+- ✅ **บทความจริง 18 เรื่อง** (แปลงจากวิดีโอ YouTube, มี `youtubeUrl`) อยู่ใน dev DB และมีสคริปต์ก็อปขึ้น prod แล้ว: `scripts/copy-articles-to-prod.ts` (skipDuplicates รันซ้ำได้), `scripts/publish-all-articles.ts` (เผยแพร่ DRAFT ทั้งหมด เรียง publishedAt ตามวันวิดีโอ)
+- ✅ **สคริปต์ admin/ตรวจสอบ**: `promote-admin.ts` (เลื่อน user บน prod เป็น ADMIN+verified), `list-users.ts`, `check-dup-articles.ts`, `inspect-articles.ts`
+- หมายเหตุ: schema จริงใช้ `Article.youtubeUrl` + `videoUploadedAt` (ไม่ใช่ `videoId` ตามที่โน้ต M11 เดิมเขียน)
+
+### งานที่เหลือ (ตาม TESTING.md — ติ๊กต่อในไฟล์นั้น)
+
+- [ ] Phase A ที่เหลือ: เช็ค OAuth ใน DB, R2 upload จริง, flow seller/admin/buyer, มือถือ 360px
+- [ ] Phase B: ยืนยัน soft-404 บนโดเมนจริง, Lighthouse ≥85, Rich Results, sitemap/robots, security headers, flow 4G
+- [ ] Search Console + analytics + ตรวจกฎหมาย /privacy /terms → tag `v1.0.0`
+- ⚠️ เมื่อ deploy Directory (D1+): ต้องรัน `npx prisma migrate deploy` กับ prod DB ด้วย (มี migration ใหม่ `add_shop_directory`)
 
 ---
 
