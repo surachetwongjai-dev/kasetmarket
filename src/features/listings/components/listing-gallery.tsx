@@ -4,14 +4,14 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import type { ListingImage } from "@prisma/client";
 import { cn } from "@/lib/utils";
 
 export function ListingGallery({
   images,
   title,
 }: {
-  images: ListingImage[];
+  // โครงสร้างขั้นต่ำ — ใช้ได้ทั้ง ListingImage และ ShopImage (directory Phase 1.5)
+  images: { id: string; url: string }[];
   title: string;
 }) {
   const [active, setActive] = useState(0);

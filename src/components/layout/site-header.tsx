@@ -3,6 +3,7 @@ import { HeaderAuth } from "@/components/layout/header-auth";
 
 const NAV_LINKS = [
   { href: "/listings", label: "ประกาศขาย" },
+  { href: "/ร้านค้า", label: "ร้านค้าเกษตร" },
   { href: "/articles", label: "บทความเกษตร" },
 ];
 

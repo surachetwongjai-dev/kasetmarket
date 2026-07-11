@@ -41,6 +41,26 @@ const nextConfig: NextConfig = {
   async headers() {
     return [{ source: "/(.*)", headers: securityHeaders }];
   },
+  // Directory ร้านค้า: URL สาธารณะเป็นไทย /ร้านค้า (SEO — CLAUDE.md §10) แต่โฟลเดอร์ route
+  // เป็น ascii /shops เพราะ Next 15.5 มีบั๊ก match static segment ที่เป็น unicode ไม่ได้
+  // (percent-encoded request จาก browser จริงคืน 404 — ทดสอบแล้วกับ next start)
+  async rewrites() {
+    // ต้องมีทั้งรูป percent-encoded (browser/crawler ส่งจริง) และรูป literal (บาง client ส่ง raw bytes)
+    const encoded = encodeURIComponent("ร้านค้า");
+    return [
+      { source: `/${encoded}`, destination: "/shops" },
+      { source: `/${encoded}/:path*`, destination: "/shops/:path*" },
+      { source: "/ร้านค้า", destination: "/shops" },
+      { source: "/ร้านค้า/:path*", destination: "/shops/:path*" },
+    ];
+  },
+  // กันเข้าถึง /shops ตรงๆ ซ้ำกับ URL ไทย (duplicate content) — เด้งกลับ URL หลัก
+  async redirects() {
+    return [
+      { source: "/shops", destination: "/ร้านค้า", permanent: true },
+      { source: "/shops/:path*", destination: "/ร้านค้า/:path*", permanent: true },
+    ];
+  },
 };
 
 export default nextConfig;
