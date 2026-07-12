@@ -10,7 +10,16 @@ import {
 import { getPublishedArticles } from "@/features/articles/queries";
 import { ListingCard } from "@/features/listings/components/listing-card";
 import { ArticleCard } from "@/features/articles/components/article-card";
+import {
+  getHomeFeaturedPrices,
+  pricePath,
+  PRICES_BASE,
+  formatRange,
+  priceChange,
+  PriceChange,
+} from "@/features/prices";
 import { CATEGORIES } from "@/config/categories";
+import { FLAGS } from "@/config/flags";
 import { SITE_NAME, SITE_URL, YOUTUBE_CHANNEL_URL } from "@/config/site";
 
 export const revalidate = 300;
@@ -55,10 +64,11 @@ const siteJsonLd = {
 };
 
 export default async function HomePage() {
-  const [featured, latest, articles] = await Promise.all([
+  const [featured, latest, articles, homePrices] = await Promise.all([
     getFeaturedListings(4),
     getLatestListings(12),
     getPublishedArticles({ page: 1 }),
+    FLAGS.PRICES ? getHomeFeaturedPrices() : Promise.resolve([]),
   ]);
 
   return (
@@ -124,6 +134,46 @@ export default async function HomePage() {
           ))}
         </div>
       </section>
+
+      {/* แถบราคาวันนี้ (เมื่อเปิด FLAGS.PRICES) */}
+      {homePrices.length > 0 && (
+        <section className="pb-8">
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="font-heading text-xl font-bold text-primary-dk">
+              📊 ราคาวันนี้
+            </h2>
+            <Link
+              href={PRICES_BASE}
+              className="text-sm font-medium text-primary underline-offset-4 hover:underline"
+            >
+              ดูราคาทั้งหมด →
+            </Link>
+          </div>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
+            {homePrices.map((p) => {
+              const latest = p.entries[0];
+              return (
+                <Link
+                  key={p.id}
+                  href={pricePath(p.slug)}
+                  className="rounded-xl border border-border bg-card p-3 transition-colors hover:border-primary hover:bg-primary/5"
+                >
+                  <p className="truncate text-sm font-medium text-foreground">
+                    {p.name}
+                  </p>
+                  <p className="mt-1 font-num text-lg font-bold text-accent-gold-foreground">
+                    {formatRange(latest)}
+                  </p>
+                  <p className="text-xs text-muted-foreground">{p.unit}</p>
+                  <p className="mt-0.5 text-xs">
+                    <PriceChange change={priceChange(latest, p.entries[1])} />
+                  </p>
+                </Link>
+              );
+            })}
+          </div>
+        </section>
+      )}
 
       {/* ประกาศเด่น */}
       {featured.length > 0 && (

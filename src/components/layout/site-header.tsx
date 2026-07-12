@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { HeaderAuth } from "@/components/layout/header-auth";
+import { FLAGS } from "@/config/flags";
 
 const NAV_LINKS = [
   { href: "/listings", label: "ประกาศขาย" },
   { href: "/ร้านค้า", label: "ร้านค้าเกษตร" },
+  ...(FLAGS.PRICES ? [{ href: "/ราคาสินค้าเกษตร", label: "ราคากลาง" }] : []),
   { href: "/articles", label: "บทความเกษตร" },
 ];
 

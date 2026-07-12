@@ -8,7 +8,7 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/features/auth";
 import { generateSlug } from "@/lib/slug";
 import { priceItemSchema, DATE_RE } from "./schemas";
-import { dateFromStr } from "./queries";
+import { dateFromStr, getPriceItemSlugsByIds } from "./queries";
 
 export type PriceFormState = {
   success?: boolean;
@@ -97,6 +97,13 @@ export async function saveDailyPricesAction(
   );
 
   revalidatePath("/admin/prices");
+  // revalidate หน้า public ราคา (P2) — หน้ารวม + รายตัวที่เพิ่งบันทึก + หน้าแรก + sitemap
+  revalidatePath("/prices");
+  revalidatePath("/");
+  revalidatePath("/sitemap.xml");
+  const slugs = await getPriceItemSlugsByIds(valid.map((r) => r.itemId));
+  for (const slug of slugs) revalidatePath(`/prices/${slug}`);
+
   return { success: true, savedCount: valid.length };
 }
 

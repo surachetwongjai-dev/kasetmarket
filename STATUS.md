@@ -2,11 +2,38 @@
 
 > อัปเดตหลังจบทุก milestone — session ใหม่อ่านไฟล์นี้คู่กับ CLAUDE.md + PLAN.md
 
-- **Milestone ปัจจุบัน:** Phase 2 — **กลุ่ม T (Trust) เสร็จครบ** + **P1 (ราคากลาง: schema + admin CMS กรอกราคา) ✅** · ก้อนถัดไปตามแผน = **P2 (หน้า public ราคากลาง + SEO)**
-- **⚙️ Feature flag:** `FLAGS.REVIEWS = false` (T2 เปิดเมื่อพร้อม) · T3 verify ไม่มี flag · `FLAGS.PRICES = false` (คุมหน้า public P2 — admin CMS P1 เปิดใช้ได้เลยไม่ผูก flag)
+- **Milestone ปัจจุบัน:** Phase 2 — **กลุ่ม T (Trust) เสร็จครบ** + **กลุ่ม P (ราคากลาง P1+P2) เสร็จครบ ✅** · ก้อนถัดไปตามแผน = **กลุ่ม U (โปรไฟล์เกษตรกร) — U1** (หรือ P3 import อัตโนมัติ ทำหลังมีโดเมนจริง)
+- **⚙️ Feature flag:** `FLAGS.REVIEWS = false` (T2 เปิดเมื่อพร้อม) · T3 verify ไม่มี flag · `FLAGS.PRICES = false` (หน้า public P2 สร้างเสร็จ+เทสผ่าน — เปิด `true` เมื่อกรอกราคา ~2 วันแล้ว จะได้มีลูกศรเปลี่ยนแปลง · admin CMS P1 เปิดใช้ได้เลยไม่ผูก flag)
 - **⚠️ migration ค้างสำหรับ prod (5 ตัว):** `add_shop_directory` · `add_contact_reveal` · `add_seller_reviews` · `add_verification_request` · `add_price_tables` — ตอน deploy: `npx dotenv-cli -e .env.production-db -- npx prisma migrate deploy` แล้วรัน `npx dotenv-cli -e .env.production-db -- npx tsx scripts/seed-price-items.ts` (seed 26 รายการราคา)
 - **โดเมนจริง:** taladkaset.com (ผู้ใช้แจ้ง 2026-07-12) — ตั้ง `NEXT_PUBLIC_SITE_URL=https://taladkaset.com` ตอน deploy; แบรนด์ในโค้ดยังเป็น "KasetMarket" ถ้าจะรีแบรนด์ต้องสั่งเป็นงานแยก
 - **อัปเดตล่าสุด:** 2026-07-12
+
+---
+
+## Phase 2 — P2: Public price pages ✅ (2026-07-12)
+
+> สเปค PLAN-PHASE2.md §3 กลุ่ม P (P2) — หน้า public + SEO · หลัง `FLAGS.PRICES` (ปิดไว้ เปิดเมื่อมีข้อมูล ~2 วัน)
+
+### สิ่งที่ทำ
+
+- **URL ไทย** `/ราคาสินค้าเกษตร` → route จริง `/prices` (rewrite ใน next.config ตามแพทเทิร์น directory) + `/ราคาสินค้าเกษตร/[slug]` → `/prices/[slug]` + redirect ascii→ไทย (308) · path helper `features/prices/paths.ts`
+- **`features/prices` เพิ่ม:** `format.ts` (priceMid/priceChange/formatRange/isStale — ไม่พึ่ง prisma), public queries (getPriceOverview 2 entry ล่าสุด/รายการ, getPriceItemDetail 30 วัน, getPriceItemsForSitemap, getHomeFeaturedPrices, getListingsForPriceCategory cross-link), components (**price-sparkline** SVG polyline เขียนเอง, **price-change** ▲เขียว/▼แดง/—)
+- **หน้ารวม `/ราคาสินค้าเกษตร`** (ISR 1 ชม.): จัดกลุ่มตามหมวด — ตาราง ชื่อ/ราคาล่าสุด(min–max)+หน่วย/ลูกศรเปลี่ยน/วันที่ · header วันอัปเดตล่าสุด + เตือนถ้าเก่า >7 วัน + disclaimer "ราคาอ้างอิง" · ตาราง overflow-x-auto (มือถือไม่ล้น)
+- **หน้ารายตัว `/ราคาสินค้าเกษตร/[slug]`** (ISR 1 ชม.): ราคาล่าสุดป้ายทองตัวใหญ่ + ลูกศร, sparkline SVG, ตาราง 30 วันย้อนหลัง (เปลี่ยนต่อแถว), แหล่งอ้างอิง+ลิงก์, **cross-link** ประกาศหมวด map + บทความ (reuse mapping), JSON-LD `Dataset`, SEO title "ราคา{ชื่อ}วันนี้ ล่าสุด {เดือน ปี} — ย้อนหลัง 30 วัน" · รายการไม่มี entry → 404
+- **cross-link mapping** ใน `config/priceCategories.ts` (หมวดราคา → หมวดประกาศ) · **sitemap** เพิ่มหน้ารวม+รายตัวเฉพาะที่มีข้อมูล (หลัง flag) · **หน้าแรก** แถบ "ราคาวันนี้" 5 รายการเด่น + **nav header** ลิงก์ "ราคากลาง" (ทั้งคู่เมื่อ flag เปิด) · **saveDailyPricesAction** (P1) revalidate `/prices` + รายตัวที่บันทึก + `/` + sitemap
+
+### ทดสอบแล้ว (E2E บน `next start` prod build flag=ON + seed 2 วัน — 19/19 ผ่าน · เทสเสร็จปิด flag)
+
+- [x] กรอก 2 วันติด → **หน้ารวมโชว์ลูกศรถูกทิศ** (ขึ้น▲/ลง▼/เท่าเดิม—) + disclaimer
+- [x] หน้ารายตัว: ราคาใหญ่ 12,500 บาท/ตัน + ▲ + **sparkline SVG** + ตารางย้อนหลัง + **JSON-LD Dataset** + **cross-link ประกาศ**
+- [x] **รายการไม่มีข้อมูล → 404 + ไม่โชว์ในหน้ารวม + ไม่เข้า sitemap**
+- [x] sitemap มีหน้ารวม+รายตัวที่มีข้อมูล · redirect `/prices` → URL ไทย (308) · หน้าแรกมีแถบ "ราคาวันนี้"
+- [x] `npm run build` ผ่านทั้ง flag on/off — ข้อมูล/สคริปต์ทดสอบล้างหมด (คง 26 catalog, 0 entry)
+
+### งานที่เหลือ
+
+- [ ] (ฝั่งคุณ) กรอกราคาจริงที่ `/admin/prices` อย่างน้อย 2 วัน → เปิด `FLAGS.PRICES=true` → หน้า public + แถบหน้าแรก + nav โผล่พร้อมลูกศรเปลี่ยนแปลง
+- [ ] **P3 (หลังมีโดเมนจริง):** probe MOC/NABC API + import อัตโนมัติ + cron (สเปคใน PLAN-PHASE2 §3)
 
 ---
 

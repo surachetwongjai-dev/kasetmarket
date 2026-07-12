@@ -12,16 +12,24 @@ import {
   shopPath,
 } from "@/features/directory/paths";
 import { absoluteUrl } from "@/features/directory/seo";
+import {
+  getPriceItemsForSitemap,
+  PRICES_BASE,
+  pricePath,
+  priceAbsoluteUrl,
+} from "@/features/prices";
 import { getShopCategory } from "@/config/shopCategories";
+import { FLAGS } from "@/config/flags";
 import { SITE_URL } from "@/config/site";
 
 export const revalidate = 3600;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [listings, articles, shops] = await Promise.all([
+  const [listings, articles, shops, priceItems] = await Promise.all([
     getAllActiveListingSlugs(),
     getAllPublishedArticleSlugs(),
     getAllApprovedShops(),
+    FLAGS.PRICES ? getPriceItemsForSitemap() : Promise.resolve([]),
   ]);
 
   const staticPages: MetadataRoute.Sitemap = [
@@ -86,5 +94,28 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     })),
   ];
 
-  return [...staticPages, ...listingPages, ...articlePages, ...directoryPages];
+  // ราคากลาง: หน้ารวม + รายตัวเฉพาะที่มีข้อมูล (หลัง FLAGS.PRICES)
+  const pricePages: MetadataRoute.Sitemap = priceItems.length
+    ? [
+        {
+          url: priceAbsoluteUrl(PRICES_BASE),
+          changeFrequency: "daily",
+          priority: 0.8,
+        },
+        ...priceItems.map((p) => ({
+          url: priceAbsoluteUrl(pricePath(p.slug)),
+          lastModified: p.lastModified ?? undefined,
+          changeFrequency: "daily" as const,
+          priority: 0.7,
+        })),
+      ]
+    : [];
+
+  return [
+    ...staticPages,
+    ...listingPages,
+    ...articlePages,
+    ...directoryPages,
+    ...pricePages,
+  ];
 }
