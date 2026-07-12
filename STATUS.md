@@ -2,8 +2,31 @@
 
 > อัปเดตหลังจบทุก milestone — session ใหม่อ่านไฟล์นี้คู่กับ CLAUDE.md + PLAN.md
 
-- **Milestone ปัจจุบัน:** Phase 1.5 Directory ร้านค้า (D1–D6) — เริ่ม 2026-07-12 หลัง M11 (โค้ด) เสร็จและ deploy คืบหน้าบางส่วน
+- **Milestone ปัจจุบัน:** Phase 1.5 Directory ร้านค้า (D1–D6) ✅ เสร็จ 2026-07-12 — เหลืองานฝั่งผู้ใช้ (CSV ร้านจริง + migrate prod + เทสมือถือ) และงานค้าง M11 (TESTING.md)
 - **อัปเดตล่าสุด:** 2026-07-12
+
+---
+
+## Phase 1.5: Directory ร้านค้า (D1–D6) ✅ (2026-07-12)
+
+> สเปคเต็ม CLAUDE.md §10 + หัวข้อ "การตัดสินใจจริงระหว่างสร้าง" (สำคัญ: URL ไทยผ่าน rewrite เพราะบั๊ก unicode ของ Next 15.5)
+
+### สิ่งที่ทำ (commit ละ milestone)
+
+- **D1** (`5d63be0`): `Shop`/`ShopImage`/`ShopStatus` (migration `20260712000000_add_shop_directory` — apply กับ **dev DB แล้ว, prod ยังไม่**), `config/shopCategories.ts` (6 หมวด + mapping หมวดประกาศ + slug ไทย), `scripts/seed-shops.ts` (CSV → upsert ด้วย natural key `(name, province)` — เทสรัน 2 รอบไม่ duplicate), `prisma/shops-sample.csv` ข้อมูลตัวอย่าง 11 ร้าน (นครสวรรค์ 10 + ลพบุรี 1 — **ตัวอย่างทั้งหมด ต้องแทนด้วย CSV ร้านจริงก่อนใช้บน prod**)
+- **D2** (`83a744a`): routes 4 ระดับใน `app/(public)/shops/` + rewrite เป็น URL ไทย `/ร้านค้า/[จังหวัด]/[หมวด]/[slug]`, `features/directory/` (queries/paths/shop-card/shop-filters/shop-pagination), จังหวัด-หมวดไม่มีร้าน → 404, nav header เพิ่มลิงก์ "ร้านค้าเกษตร" — เทสด้วย `next start` + curl: ทุก route คืน status ถูกต้องทั้ง URL encoded/raw, `/shops` redirect 308 กลับ URL ไทย
+- **D3** (`c63e1c7`): cross-link ผ่าน mapping ใน config เท่านั้น — หน้าประกาศ↔บล็อก "ร้านค้าใกล้คุณ" (≤4), หน้าร้าน↔"ประกาศขายในพื้นที่นี้" (≤4) + บทความเกี่ยวข้อง (≤3), หน้าหมวด↔ลิงก์หมวดประกาศ+บทความ — เทสสองทางด้วยประกาศปุ๋ย ลพบุรี ↔ ร้านปุ๋ยลพบุรี
+- **D4** (`5c7abe0`): `features/directory/seo.ts` — `LocalBusiness` (geo/openHours/telephone แบบมีเงื่อนไข) + `BreadcrumbList` JSON-LD ทุกหน้า, content generator ≥150 คำจากข้อมูลจริง (จำนวนร้าน/อำเภอ/หมวด/ร้านแนะนำ + คำแนะนำประจำหมวด, intro 3 แบบเลือกด้วย hash คงที่ต่อหน้า — วัดจริง: 183-204 คำ), sitemap เพิ่ม 21 URL directory (เฉพาะหน้าที่มีร้าน)
+- **D5** (`731afee`): ฟอร์ม `/ลงทะเบียนร้านค้า` ไม่บังคับล็อกอิน (honeypot + rate limit 3/ชม./IP + global cap 20/ชม.) → PENDING, `/api/upload/shop` สำหรับอัปรูปไม่ล็อกอิน (12/ชม./IP), `/admin/shops` (คิว + approve/reject + featured + แก้ไข), on-demand revalidate ครบ — **เทส E2E เต็ม flow ผ่าน**: submit (จำลอง no-JS POST) → 303 ไปหน้าสำเร็จ → login admin → เห็นในคิว → approve → ขึ้นหน้าจังหวัด + เข้า sitemap (ข้อมูลทดสอบล้างแล้ว)
+- **แก้ระหว่างทาง:** rename `.env.production.local` → `.env.production-db` (Next โหลดชื่อเดิมอัตโนมัติตอน build/start ทำให้เทสในเครื่องแอบชี้ prod DB — สคริต์ที่อ้างถึงแก้ครบแล้ว), `redirect()` URL ไทยต้อง `encodeURI()` (Location header เป็น ASCII เท่านั้น)
+
+### งานที่เหลือ (ฝั่งคุณ)
+
+- [ ] เตรียม **CSV ร้านจริง** ชุดแรก (จังหวัดฐานคนดู YouTube เยอะสุด) → ลบร้านตัวอย่าง + `npx tsx scripts/seed-shops.ts <ไฟล์>`
+- [ ] ตอน deploy: `npx dotenv-cli -e .env.production-db -- npx prisma migrate deploy` (มี migration `add_shop_directory` ค้างสำหรับ prod)
+- [ ] เทสบนมือถือจริง: ฟอร์มลงทะเบียนร้าน + แผนที่ + ปุ่มโทร/LINE บนหน้าร้าน
+- [ ] ยังไม่ tag `v1.1.0` (PLAN ระบุ tag ที่ D6) — เพราะ `v1.0.0` ยังไม่ tag (M11 Phase B ยังไม่เสร็จ) แนะนำ tag ตามลำดับหลัง launch จริง
+- [ ] คลิป/Shorts แนะนำ directory + ติดต่อร้านให้ claim ข้อมูล (ดูท้าย PLAN.md D6)
 
 ---
 

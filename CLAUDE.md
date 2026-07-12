@@ -275,7 +275,12 @@ npm run dev          # dev server
 npm run build        # ต้องผ่านก่อน commit milestone
 npx prisma migrate dev --name <ชื่อ>
 npx prisma studio    # ดูข้อมูล
+npx tsx scripts/seed-shops.ts <ไฟล์.csv>   # seed ร้านค้า directory จาก CSV (รันซ้ำได้ ไม่ duplicate)
 ```
+
+**⚠️ env files:** `.env` = dev · `.env.production-db` = DB production (ใช้กับสคริปต์ผ่าน `dotenv-cli` เท่านั้น)
+**ห้าม**ตั้งชื่อ `.env.production.local` — Next โหลดชื่อนั้นอัตโนมัติตอน `next build`/`next start` ทำให้เทสในเครื่องแอบชี้ prod DB (เจอมาแล้ว 2026-07-12)
+เทส production build ในเครื่อง: override `DATABASE_URL`/`DIRECT_URL` เป็นของ dev + ตั้ง `AUTH_TRUST_HOST=true` (Auth.js ปฏิเสธ host ที่ไม่รู้จักใน production mode — บน Vercel ตั้งให้อัตโนมัติ)
 
 ### Security & PDPA
 - เบอร์โทรผู้ขายแสดงเฉพาะเมื่อผู้ซื้อกด "แสดงเบอร์" (ลด scraping)
@@ -376,3 +381,13 @@ model ShopImage {
 - Seed script รับ CSV: `name, categories, province, district, address, phone, lineId, facebookUrl, openHours` → upsert เป็น batch (สำหรับเติมข้อมูลร้านจริงจำนวนมาก)
 - Approve flow: ใช้ admin panel เดิม (M7) — เพิ่มแท็บ `/admin/shops`: คิว PENDING, approve/reject, แก้ข้อมูลร้าน, ตั้ง featured
 - ฟอร์ม `/ลงทะเบียนร้านค้า` ไม่บังคับล็อกอิน (ลด friction เจ้าของร้านสูงวัย) แต่มี rate limit + honeypot กัน spam
+
+### การตัดสินใจจริงระหว่างสร้าง (D1–D6, 2026-07-12) — ต่างจาก/เพิ่มจากสเปคข้างบน
+
+1. **URL ไทยทำผ่าน rewrite ไม่ใช่ชื่อโฟลเดอร์ route:** Next 15.5 มีบั๊ก match static segment ที่เป็น unicode ไม่ได้ (request percent-encoded จาก browser/Googlebot จริงคืน 404 — พิสูจน์แล้วกับ `next start`) จึงเก็บ route จริงเป็น ascii `app/(public)/shops/...` + `app/(public)/register-shop/` แล้ว rewrite `/ร้านค้า/*` → `/shops/*`, `/ลงทะเบียนร้านค้า` → `/register-shop` ใน `next.config.ts` (ต้องมี source ทั้งรูป encoded และ literal) พร้อม redirect ทางกลับกัน path ภายใน → URL ไทย กัน duplicate content — **URL สาธารณะเป็นไทยตามสเปคทุกหน้า** ตัวช่วยประกอบ path อยู่ `features/directory/paths.ts` ห้ามประกอบเอง
+2. **`config/shopCategories.ts`:** DB เก็บ `value` ascii (convention เดียวกับหมวดประกาศ), มี `slug` ไทยสำหรับ URL segment + `listingCategories` mapping ตามสเปค — helper: `shopCategoryBySlug`, `listingCategoriesOfShop`, `shopCategoriesForListingCategory`
+3. **Shop มี `@@unique([name, province])`** เป็น natural key ให้ seed CSV รันซ้ำได้ไม่ duplicate (slug คงเดิม URL ไม่เปลี่ยน) — ร้านที่ seed สร้างใหม่เป็น APPROVED ทันที (ข้อมูลจากแอดมิน) แต่รันซ้ำจะไม่แตะ status เดิม (ร้านที่ reject ไปแล้วไม่ฟื้น)
+4. **`redirect()` ใน server action ที่ชี้ URL ไทยต้อง `encodeURI()`** — ไม่งั้น Location header มีอักขระ non-ASCII → 500 (เจอจริงตอนเทส no-JS form)
+5. **`revalidatePath` ของหน้า directory ใช้ path ภายใน `/shops/...`** (route จริง) ไม่ใช่ URL ไทย — actions D5 revalidate ครบทั้งหน้า hub/จังหวัด/หมวด/ร้าน + sitemap เมื่อ approve/แก้/ตั้ง featured
+6. **อัปรูปฟอร์มลงทะเบียน (ไม่ล็อกอิน) ใช้ `/api/upload/shop`** แยกจาก `/api/upload` (ที่ยังบังคับล็อกอิน) — จำกัด 12 ครั้ง/ชม./IP แบบ in-memory; ฟอร์ม submit เองก็มี honeypot (ช่อง `website`) + rate limit 3 ครั้ง/ชม./IP + global cap 20 ร้าน/ชม. จาก DB
+7. **`ImageUploader` เพิ่ม props `max` + `endpoint`** (backward-compatible) และ `ListingGallery` widen type รูปเป็น `{id,url}[]` เพื่อ reuse กับร้านค้า
