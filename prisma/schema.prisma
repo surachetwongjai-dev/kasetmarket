@@ -42,6 +42,8 @@ model User {
   listings      Listing[]
   reports       Report[]
   contactReveals ContactReveal[] // เหตุการณ์กดดูช่องทางติดต่อของ user นี้ (ฐาน gate รีวิว T2)
+  reviewsReceived SellerReview[] @relation("ReviewsReceived") // รีวิวที่ผู้ขายคนนี้ได้รับ
+  reviewsGiven    SellerReview[] @relation("ReviewsGiven")    // รีวิวที่ user คนนี้เขียนให้คนอื่น
 }
 
 // OAuth account linking (Auth.js Prisma adapter) — LINE / Google
@@ -87,6 +89,7 @@ model Listing {
   sellerId     String
   reports      Report[]
   contactReveals ContactReveal[]
+  reviews      SellerReview[] // รีวิวที่อ้างอิงถึงประกาศนี้ (โชว์ "ซื้ออะไร")
   createdAt    DateTime       @default(now())
   updatedAt    DateTime       @updatedAt
 
@@ -189,4 +192,36 @@ model ContactReveal {
 
   @@index([listingId])
   @@index([userId, createdAt])
+}
+
+// T2: รีวิวผู้ขาย — gate ด้วย ContactReveal ≥24ชม. + 1 รีวิว/คู่ (แก้/ลบของตัวเองได้)
+model SellerReview {
+  id          String   @id @default(cuid())
+  seller      User     @relation("ReviewsReceived", fields: [sellerId], references: [id], onDelete: Cascade)
+  sellerId    String
+  reviewer    User     @relation("ReviewsGiven", fields: [reviewerId], references: [id], onDelete: Cascade)
+  reviewerId  String
+  listing     Listing? @relation(fields: [listingId], references: [id], onDelete: SetNull)
+  listingId   String? // ประกาศที่เกี่ยว (ถ้ามี — โชว์ "ซื้ออะไร")
+  rating      Int // 1-5
+  comment     String?  @db.Text
+  sellerReply String?  @db.Text // ผู้ขายตอบได้ 1 ครั้ง (แก้ได้)
+  hidden      Boolean  @default(false) // แอดมินซ่อน
+  reports     ReviewReport[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([sellerId, reviewerId]) // 1 รีวิวต่อคู่ (แก้ไขรีวิวเดิมได้)
+  @@index([sellerId, hidden, createdAt])
+}
+
+model ReviewReport {
+  id        String       @id @default(cuid())
+  review    SellerReview @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  reviewId  String
+  reason    String
+  resolved  Boolean      @default(false)
+  createdAt DateTime     @default(now())
+
+  @@index([resolved, createdAt])
 }

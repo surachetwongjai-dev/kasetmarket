@@ -3,12 +3,14 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/features/auth";
+import { FLAGS } from "@/config/flags";
 
 const TABS = [
   { href: "/admin", label: "ภาพรวม" },
   { href: "/admin/moderation", label: "คิวอนุมัติ" },
   { href: "/admin/users", label: "ผู้ใช้" },
   { href: "/admin/reports", label: "รายงาน" },
+  ...(FLAGS.REVIEWS ? [{ href: "/admin/reviews", label: "รีวิว" }] : []),
   { href: "/admin/listings", label: "ประกาศ" },
   { href: "/admin/articles", label: "บทความ" },
   { href: "/admin/shops", label: "ร้านค้า" },

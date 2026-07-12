@@ -1,16 +1,25 @@
-// โปรไฟล์ผู้ขาย — ประกาศ ACTIVE ทั้งหมด + badge ยืนยัน (M9)
+// โปรไฟล์ผู้ขาย — ประกาศ ACTIVE ทั้งหมด + badge ยืนยัน (M9) + รีวิวผู้ขาย (T2)
+// dynamic: ต้องรู้ผู้ชม (auth) เพื่อแสดงฟอร์มรีวิว/ตอบกลับตามสิทธิ์
 
 import type { Metadata } from "next";
 import Image from "next/image";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
   getSellerProfile,
   getSellerActiveListings,
 } from "@/features/listings/queries";
 import { ListingCard } from "@/features/listings/components/listing-card";
+import { auth } from "@/features/auth";
+import { FLAGS } from "@/config/flags";
+import {
+  RatingStars,
+  ReviewSection,
+  getSellerRatingSummary,
+  getSellerReviews,
+  getReviewEligibility,
+} from "@/features/trust";
 import { formatThaiDate } from "@/lib/format";
-
-export const revalidate = 300;
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -30,7 +39,24 @@ export default async function SellerProfilePage({ params }: Props) {
   const seller = await getSellerProfile(id);
   if (!seller) notFound();
 
-  const listings = await getSellerActiveListings(id);
+  const session = await auth();
+  const viewerId = session?.user?.id ?? null;
+  const isSeller = viewerId === seller.id;
+
+  const [listings, review] = await Promise.all([
+    getSellerActiveListings(id),
+    FLAGS.REVIEWS
+      ? Promise.all([
+          getSellerRatingSummary(id),
+          getSellerReviews(id),
+          getReviewEligibility(id, viewerId),
+        ]).then(([summary, reviews, eligibility]) => ({
+          summary,
+          reviews,
+          eligibility,
+        }))
+      : Promise.resolve(null),
+  ]);
 
   return (
     <main className="mx-auto w-full max-w-6xl px-4 py-6">
@@ -59,6 +85,15 @@ export default async function SellerProfilePage({ params }: Props) {
               </span>
             )}
           </h1>
+          {review && review.summary.count > 0 && (
+            <Link href="#reviews" className="mt-1 inline-block">
+              <RatingStars
+                rating={review.summary.avg}
+                count={review.summary.count}
+                size="lg"
+              />
+            </Link>
+          )}
           <p className="mt-1 text-sm text-muted-foreground">
             {seller.province ? `📍 ${seller.province} · ` : ""}
             สมาชิกตั้งแต่ {formatThaiDate(seller.createdAt)} · ประกาศที่กำลังขาย{" "}
@@ -79,6 +114,18 @@ export default async function SellerProfilePage({ params }: Props) {
           {listings.map((listing) => (
             <ListingCard key={listing.id} listing={listing} />
           ))}
+        </div>
+      )}
+
+      {review && (
+        <div id="reviews" className="scroll-mt-4">
+          <ReviewSection
+            sellerId={seller.id}
+            isSeller={isSeller}
+            summary={review.summary}
+            reviews={review.reviews}
+            eligibility={review.eligibility}
+          />
         </div>
       )}
     </main>

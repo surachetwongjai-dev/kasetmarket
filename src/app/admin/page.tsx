@@ -3,13 +3,18 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getAdminStats } from "@/features/moderation/queries";
+import { FLAGS } from "@/config/flags";
+import { getOpenReviewReportCount } from "@/features/trust";
 
 export const metadata: Metadata = {
   title: "ผู้ดูแลระบบ",
 };
 
 export default async function AdminPage() {
-  const stats = await getAdminStats();
+  const [stats, openReviewReports] = await Promise.all([
+    getAdminStats(),
+    FLAGS.REVIEWS ? getOpenReviewReportCount() : Promise.resolve(0),
+  ]);
 
   const cards = [
     {
@@ -24,6 +29,16 @@ export default async function AdminPage() {
       href: "/admin/reports",
       urgent: stats.openReports > 0,
     },
+    ...(FLAGS.REVIEWS
+      ? [
+          {
+            label: "รายงานรีวิวค้าง",
+            value: openReviewReports,
+            href: "/admin/reviews",
+            urgent: openReviewReports > 0,
+          },
+        ]
+      : []),
     {
       label: "ประกาศใหม่วันนี้",
       value: stats.listingsToday,

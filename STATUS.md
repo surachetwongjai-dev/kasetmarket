@@ -2,9 +2,39 @@
 
 > อัปเดตหลังจบทุก milestone — session ใหม่อ่านไฟล์นี้คู่กับ CLAUDE.md + PLAN.md
 
-- **Milestone ปัจจุบัน:** Phase 2 เริ่มแล้ว — **T1 (Trust: คำเตือนตัวกลาง + ContactReveal log) ✅ เสร็จ** · ก้อนถัดไปตามแผน = **T2 (ระบบรีวิวผู้ขาย)**
+- **Milestone ปัจจุบัน:** Phase 2 — **T1 (คำเตือนตัวกลาง) + T2 (รีวิวผู้ขาย) ✅ เสร็จ** · ก้อนถัดไปตามแผน = **T3 (Verify flow เต็มระบบ)**
+- **⚙️ Feature flag:** `FLAGS.REVIEWS = false` (T2 สร้างเสร็จ+เทสผ่านแล้ว แต่ยังปิดไว้ตามแผน — เปิดเป็น `true` ใน `src/config/flags.ts` เมื่อพร้อมใช้ ไม่ต้องแก้โค้ดอื่น)
 - **โดเมนจริง:** taladkaset.com (ผู้ใช้แจ้ง 2026-07-12) — ตั้ง `NEXT_PUBLIC_SITE_URL=https://taladkaset.com` ตอน deploy; แบรนด์ในโค้ดยังเป็น "KasetMarket" ถ้าจะรีแบรนด์ต้องสั่งเป็นงานแยก
 - **อัปเดตล่าสุด:** 2026-07-12
+
+---
+
+## Phase 2 — T2: Seller reviews ✅ (2026-07-12)
+
+> สเปค PLAN-PHASE2.md §2 กลุ่ม T (T2) — อยู่หลัง `FLAGS.REVIEWS` (ปิดไว้ ยังไม่โชว์ต่อผู้ใช้จริง)
+
+### สิ่งที่ทำ
+
+- **Schema:** `SellerReview` (unique `[sellerId, reviewerId]` = 1 รีวิว/คู่, `sellerReply`, `hidden`) + `ReviewReport` + back-relation `User.reviewsReceived/reviewsGiven` + `Listing.reviews` · migration `20260712020000_add_seller_reviews` (**apply dev DB แล้ว — prod ยังไม่**)
+- **`features/trust/`** (ต่อจาก T1): `schemas.ts` (zod review/reply/report + REVIEW_REPORT_REASONS), `queries.ts` (ratingSummary aggregate, reviews (ไม่ hidden), **getReviewEligibility** — กติกากันรีวิวปลอม, admin reports), `actions.ts` (submit upsert / delete / reply / report / admin hide+resolve), components (rating-stars, review-form, reply-form, report-button, review-list, review-section, admin-actions)
+- **กติกากันรีวิวปลอม (re-validate ฝั่ง server ทุก mutation):** ต้องล็อกอิน · ห้ามรีวิวตัวเอง · ต้องมี `ContactReveal` ของตัวเองบนประกาศของผู้ขายรายนั้น **อายุ ≥24 ชม.** (หรือมีรีวิวเดิม = แก้ได้) · 1 รีวิว/คู่ (upsert) · rate limit เขียน/แก้รวม 5/วัน · listingId ที่แนบต้องเป็นประกาศของผู้ขายจริง (กันแนบมั่ว)
+- **แสดงผล:** หน้าโปรไฟล์ `/sellers/[id]` (เปลี่ยนเป็น **dynamic** เพราะต้องรู้ผู้ชม) — ดาวเฉลี่ย (ทศนิยม 1) + จำนวน + ฟอร์ม/ข้อความเงื่อนไข + list รีวิว + ตอบกลับ(ผู้ขาย) · กล่องผู้ขายในหน้าประกาศ (ISR) โชว์ดาว+จำนวน · caption ใต้ทุกรีวิว "รีวิวจากผู้ที่กดดูช่องทางติดต่อผ่านแพลตฟอร์ม" (ไม่เคลม 'ผู้ซื้อจริง')
+- **แอดมิน:** แท็บ "รีวิว" + `/admin/reviews` (คิวรายงาน + ซ่อน/เลิกซ่อน + resolve) + การ์ด "รายงานรีวิวค้าง" ในภาพรวม — ทั้งหมดโผล่เฉพาะเมื่อ flag เปิด
+- **Gate `FLAGS.REVIEWS`:** ปิด = ซ่อน UI ทุกจุด (โปรไฟล์/หน้าประกาศ/แท็บ+การ์ดแอดมิน) + `/admin/reviews` → 404 · ข้อมูลเดิมคงอยู่
+
+### ทดสอบแล้ว (E2E บน `next start` prod build flag=ON + dev DB — เทสเสร็จปิด flag กลับ)
+
+- [x] **กติกาสิทธิ์ (getReviewEligibility) ทุกกิ่ง:** ไม่ล็อกอิน→not-logged-in · รีวิวตัวเอง→self · ไม่เคยกดเบอร์→need-reveal · กด <24ชม.→reveal-too-recent · กด ≥24ชม.→รีวิวได้ (+suggestedListingId)
+- [x] eligible เห็นฟอร์ม · ไม่ครบเงื่อนไขเห็นข้อความบอกเหตุผล ไม่เห็นฟอร์ม
+- [x] ส่งรีวิวผ่าน server action จริง → ลง DB · โปรไฟล์+หน้าประกาศโชว์ดาวเฉลี่ย/จำนวนถูก + caption + ความเห็น
+- [x] รีวิวซ้ำ = แก้รีวิวเดิม (ยัง 1 แถว, ดาวคำนวณใหม่) · ผู้ขายตอบกลับโชว์ได้
+- [x] รายงานรีวิว → แอดมินเห็นในคิว → กดซ่อน → **หายจากหน้าเว็บ + ดาวเฉลี่ยคำนวณใหม่**
+- [x] `npm run build` ผ่านทั้ง flag on/off — ข้อมูล+สคริปต์ทดสอบล้างหมด
+
+### งานที่เหลือ
+
+- [ ] ตอน deploy prod: migration `add_seller_reviews` (ต่อจาก `add_contact_reveal` + `add_shop_directory` ที่ค้าง) — `npx dotenv-cli -e .env.production-db -- npx prisma migrate deploy`
+- [ ] เปิด `FLAGS.REVIEWS=true` เมื่อพร้อม (แนะนำเปิดได้เลย ไม่มีภาระ moderation ล่วงหน้า — รีวิว gate อยู่แล้ว + มีปุ่มรายงาน)
 
 ---
 

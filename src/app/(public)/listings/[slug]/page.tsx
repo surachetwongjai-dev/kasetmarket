@@ -17,6 +17,8 @@ import { SafetyNotice } from "@/features/trust/components/safety-notice";
 import { ReportButton } from "@/features/moderation/components/report-button";
 import { getShopsForListing } from "@/features/directory/queries";
 import { ShopCard } from "@/features/directory/components/shop-card";
+import { RatingStars, getSellerRatingSummary } from "@/features/trust";
+import { FLAGS } from "@/config/flags";
 import { getCategoryLabel } from "@/config/categories";
 import { getUnitLabel } from "@/config/units";
 import { formatPrice, formatThaiDate, formatTimeAgo } from "@/lib/format";
@@ -53,10 +55,14 @@ export default async function ListingDetailPage({ params }: Props) {
   const listing = await getActiveListingBySlug(decodeURIComponent(slug));
   if (!listing) notFound();
 
-  const [related, nearbyShops] = await Promise.all([
+  const [related, nearbyShops, sellerRating] = await Promise.all([
     getRelatedListings(listing),
     // cross-link directory (D3): ร้านหมวดเกี่ยวข้อง + จังหวัดเดียวกัน สูงสุด 4
     getShopsForListing(listing.category, listing.province),
+    // ดาวรีวิวผู้ขาย (T2) — เฉพาะเมื่อเปิด flag
+    FLAGS.REVIEWS
+      ? getSellerRatingSummary(listing.seller.id)
+      : Promise.resolve(null),
   ]);
 
   const jsonLd = {
@@ -157,8 +163,17 @@ export default async function ListingDetailPage({ params }: Props) {
               {listing.seller.province ? `${listing.seller.province} · ` : ""}
               สมาชิกตั้งแต่ {formatThaiDate(listing.seller.createdAt)}
             </p>
+            {sellerRating && sellerRating.count > 0 && (
+              <p className="mt-1.5">
+                <RatingStars
+                  rating={sellerRating.avg}
+                  count={sellerRating.count}
+                  size="sm"
+                />
+              </p>
+            )}
             <p className="mt-1.5 text-xs font-medium text-primary">
-              ดูประกาศทั้งหมดของผู้ขาย →
+              ดูประกาศ + รีวิวของผู้ขาย →
             </p>
           </Link>
 
