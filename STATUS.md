@@ -2,7 +2,8 @@
 
 > อัปเดตหลังจบทุก milestone — session ใหม่อ่านไฟล์นี้คู่กับ CLAUDE.md + PLAN.md
 
-- **Milestone ปัจจุบัน:** Phase 1.5 Directory ร้านค้า (D1–D6) ✅ เสร็จ 2026-07-12 — เหลืองานฝั่งผู้ใช้ (CSV ร้านจริง + migrate prod + เทสมือถือ) และงานค้าง M11 (TESTING.md)
+- **Milestone ปัจจุบัน:** Phase 1.5 Directory ✅ เสร็จ · **แผน Phase 2 (6 ระบบ, 13 milestones) เขียนแล้วที่ `PLAN-PHASE2.md`** — พร้อมเริ่ม T0+T1 (Trust) เป็นก้อนแรก
+- **โดเมนจริง:** taladkaset.com (ผู้ใช้แจ้ง 2026-07-12) — ตั้ง `NEXT_PUBLIC_SITE_URL=https://taladkaset.com` ตอน deploy; แบรนด์ในโค้ดยังเป็น "KasetMarket" ถ้าจะรีแบรนด์ต้องสั่งเป็นงานแยก
 - **อัปเดตล่าสุด:** 2026-07-12
 
 ---
