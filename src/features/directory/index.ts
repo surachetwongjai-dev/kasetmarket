@@ -14,3 +14,10 @@ export {
 export { ShopCard } from "./components/shop-card";
 export { ShopFilters } from "./components/shop-filters";
 export { DIRECTORY_BASE, provincePath, categoryPath, shopPath } from "./paths";
+export {
+  absoluteUrl,
+  breadcrumbJsonLd,
+  localBusinessJsonLd,
+  provinceContent,
+  categoryContent,
+} from "./seo";

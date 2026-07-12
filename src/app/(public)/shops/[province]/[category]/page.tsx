@@ -16,6 +16,7 @@ import {
   provincePath,
   categoryPath,
 } from "@/features/directory/paths";
+import { breadcrumbJsonLd, categoryContent } from "@/features/directory/seo";
 import { shopCategoryBySlug } from "@/config/shopCategories";
 import { PROVINCES } from "@/config/provinces";
 
@@ -52,8 +53,29 @@ export default async function CategoryDirectoryPage(props: Props) {
     category.listingCategories,
   );
 
+  // ย่อหน้าคอนเทนต์จากข้อมูลจริง + breadcrumb JSON-LD (D4)
+  const districts = [
+    ...new Set(shops.map((s) => s.district).filter((d): d is string => !!d)),
+  ];
+  const paragraphs = categoryContent({
+    province,
+    category,
+    shopCount: shops.length,
+    districts,
+    featuredNames: shops.filter((s) => s.featured).map((s) => s.name),
+  });
+  const jsonLd = breadcrumbJsonLd([
+    { name: "ร้านค้าเกษตร", path: DIRECTORY_BASE },
+    { name: province, path: provincePath(province) },
+    { name: category.label, path: categoryPath(province, category.slug) },
+  ]);
+
   return (
     <main className="mx-auto w-full max-w-6xl px-4 py-6">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <nav className="text-sm text-muted-foreground">
         <Link href={DIRECTORY_BASE} className="hover:text-primary hover:underline">
           ร้านค้าเกษตร
@@ -81,6 +103,13 @@ export default async function CategoryDirectoryPage(props: Props) {
           <ShopCard key={shop.id} shop={shop} />
         ))}
       </div>
+
+      {/* ย่อหน้าคอนเทนต์จากข้อมูลจริง ≥150 คำ (D4 — กัน thin content) */}
+      <section className="mt-8 max-w-3xl space-y-3 text-sm leading-relaxed text-muted-foreground">
+        {paragraphs.map((p, i) => (
+          <p key={i}>{p}</p>
+        ))}
+      </section>
 
       {/* cross-link (D3): ไปหมวดประกาศที่เกี่ยวข้องในจังหวัดเดียวกัน */}
       <section className="mt-8 rounded-xl border border-border bg-card p-4">

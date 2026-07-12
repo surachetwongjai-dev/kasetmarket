@@ -12,7 +12,7 @@
 > Session ระหว่าง 2026-07-10 ถึง 12 มีงาน deploy คืบหน้าแต่ยังไม่ได้บันทึก/commit — สรุปจากหลักฐานที่ตรวจสอบได้ในเครื่อง:
 
 - ✅ **OAuth ผ่านแล้ว** (TESTING.md A1, 2026-07-10): LINE + Google login สำเร็จบน localhost:3000 — งานค้างตั้งแต่ M3 ปิดได้
-- ✅ **Production DB ตั้งแล้ว** (`.env.production.local` มี `DATABASE_URL`/`DIRECT_URL` แยกจาก dev)
+- ✅ **Production DB ตั้งแล้ว** (`.env.production-db` มี `DATABASE_URL`/`DIRECT_URL` แยกจาก dev — เดิมชื่อ `.env.production.local` แต่เปลี่ยนชื่อ 2026-07-12 เพราะ Next โหลดไฟล์ชื่อนั้นอัตโนมัติตอน `next build`/`next start` ทำให้เทสในเครื่องแอบชี้ prod DB)
 - ✅ **บทความจริง 18 เรื่อง** (แปลงจากวิดีโอ YouTube, มี `youtubeUrl`) อยู่ใน dev DB และมีสคริปต์ก็อปขึ้น prod แล้ว: `scripts/copy-articles-to-prod.ts` (skipDuplicates รันซ้ำได้), `scripts/publish-all-articles.ts` (เผยแพร่ DRAFT ทั้งหมด เรียง publishedAt ตามวันวิดีโอ)
 - ✅ **สคริปต์ admin/ตรวจสอบ**: `promote-admin.ts` (เลื่อน user บน prod เป็น ADMIN+verified), `list-users.ts`, `check-dup-articles.ts`, `inspect-articles.ts`
 - หมายเหตุ: schema จริงใช้ `Article.youtubeUrl` + `videoUploadedAt` (ไม่ใช่ `videoId` ตามที่โน้ต M11 เดิมเขียน)

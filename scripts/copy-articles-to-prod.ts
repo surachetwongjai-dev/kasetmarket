@@ -1,6 +1,6 @@
 // ก็อปบทความจริง (มี youtubeUrl = 18 เรื่องที่แปลงจากวิดีโอ) จาก DB dev → DB production
 // ต้นทาง: .env (DB dev เดิม) — Prisma โหลดเองอัตโนมัติ
-// ปลายทาง: .env.production.local (DB prod ใหม่)
+// ปลายทาง: .env.production-db (DB prod ใหม่)
 // รันซ้ำได้ไม่ duplicate (skipDuplicates ด้วย slug/id เดิม)
 import { readFileSync } from "fs";
 import { PrismaClient } from "@prisma/client";
@@ -15,7 +15,7 @@ function readEnvValue(file: string, key: string): string {
 
 const source = new PrismaClient(); // DB dev จาก .env
 const target = new PrismaClient({
-  datasourceUrl: readEnvValue(".env.production.local", "DATABASE_URL"),
+  datasourceUrl: readEnvValue(".env.production-db", "DATABASE_URL"),
 });
 
 async function main() {

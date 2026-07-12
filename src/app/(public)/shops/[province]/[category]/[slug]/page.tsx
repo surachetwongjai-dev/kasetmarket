@@ -20,6 +20,10 @@ import { ContactButtons } from "@/features/listings/components/contact-buttons";
 import { ListingCard } from "@/features/listings/components/listing-card";
 import { ArticleCard } from "@/features/articles/components/article-card";
 import {
+  breadcrumbJsonLd,
+  localBusinessJsonLd,
+} from "@/features/directory/seo";
+import {
   getShopCategory,
   shopCategoryBySlug,
   listingCategoriesOfShop,
@@ -83,8 +87,23 @@ export default async function ShopProfilePage(props: Props) {
           )}`
         : null;
 
+  // JSON-LD (D4): LocalBusiness (รวม geo/openHours/telephone) + BreadcrumbList
+  const jsonLd = [
+    localBusinessJsonLd(shop),
+    breadcrumbJsonLd([
+      { name: "ร้านค้าเกษตร", path: DIRECTORY_BASE },
+      { name: shop.province, path: provincePath(shop.province) },
+      { name: category.label, path: categoryPath(shop.province, category.slug) },
+      { name: shop.name, path: shopPath(shop) },
+    ]),
+  ];
+
   return (
     <main className="mx-auto w-full max-w-4xl px-4 py-6">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <nav className="text-sm text-muted-foreground">
         <Link href={DIRECTORY_BASE} className="hover:text-primary hover:underline">
           ร้านค้าเกษตร

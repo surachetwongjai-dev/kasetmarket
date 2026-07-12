@@ -1,5 +1,5 @@
 // เลื่อน user เป็น ADMIN + verified — ระบุอีเมลเป็น argument กันพลาดคนผิด
-// ใช้: npx dotenv-cli -e .env.production.local -- npx tsx scripts/promote-admin.ts <email>
+// ใช้: npx dotenv-cli -e .env.production-db -- npx tsx scripts/promote-admin.ts <email>
 import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();

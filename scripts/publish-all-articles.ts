@@ -1,6 +1,6 @@
 // เผยแพร่บทความ DRAFT ทั้งหมด (เฉพาะบทความจริงที่มี youtubeUrl)
 // ตั้ง publishedAt ไล่ห่างกัน 1 นาทีตามลำดับวันที่วิดีโอ เพื่อให้หน้า list เรียงลำดับคงที่
-// ใช้: npx dotenv-cli -e .env.production.local -- npx tsx scripts/publish-all-articles.ts
+// ใช้: npx dotenv-cli -e .env.production-db -- npx tsx scripts/publish-all-articles.ts
 import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();

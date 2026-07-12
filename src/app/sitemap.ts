@@ -1,16 +1,27 @@
-// sitemap.xml อัตโนมัติ — หน้า static + ประกาศ ACTIVE ทุกรายการ + บทความ published ทุกเรื่อง (§9)
+// sitemap.xml อัตโนมัติ — หน้า static + ประกาศ ACTIVE + บทความ published (§9)
+// + ทุกหน้า directory ร้านค้า เฉพาะหน้าที่มีร้านจริง (§10 — ห้ามใส่หน้าเปล่า)
 
 import type { MetadataRoute } from "next";
 import { getAllActiveListingSlugs } from "@/features/listings/queries";
 import { getAllPublishedArticleSlugs } from "@/features/articles/queries";
+import { getAllApprovedShops } from "@/features/directory/queries";
+import {
+  DIRECTORY_BASE,
+  provincePath,
+  categoryPath,
+  shopPath,
+} from "@/features/directory/paths";
+import { absoluteUrl } from "@/features/directory/seo";
+import { getShopCategory } from "@/config/shopCategories";
 import { SITE_URL } from "@/config/site";
 
 export const revalidate = 3600;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [listings, articles] = await Promise.all([
+  const [listings, articles, shops] = await Promise.all([
     getAllActiveListingSlugs(),
     getAllPublishedArticleSlugs(),
+    getAllApprovedShops(),
   ]);
 
   const staticPages: MetadataRoute.Sitemap = [
@@ -36,5 +47,44 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.6,
   }));
 
-  return [...staticPages, ...listingPages, ...articlePages];
+  // directory: จังหวัด × หมวด × ร้าน — สร้างจากร้าน APPROVED จริงเท่านั้น
+  const provinceSet = new Set<string>();
+  const categoryPaths = new Set<string>();
+  for (const shop of shops) {
+    provinceSet.add(shop.province);
+    for (const value of shop.categories) {
+      const category = getShopCategory(value);
+      if (category) categoryPaths.add(categoryPath(shop.province, category.slug));
+    }
+  }
+
+  const directoryPages: MetadataRoute.Sitemap = [
+    ...(shops.length
+      ? [
+          {
+            url: absoluteUrl(DIRECTORY_BASE),
+            changeFrequency: "daily" as const,
+            priority: 0.8,
+          },
+        ]
+      : []),
+    ...[...provinceSet].map((province) => ({
+      url: absoluteUrl(provincePath(province)),
+      changeFrequency: "weekly" as const,
+      priority: 0.7,
+    })),
+    ...[...categoryPaths].map((path) => ({
+      url: absoluteUrl(path),
+      changeFrequency: "weekly" as const,
+      priority: 0.8, // หน้าดัก keyword หลัก
+    })),
+    ...shops.map((shop) => ({
+      url: absoluteUrl(shopPath(shop)),
+      lastModified: shop.updatedAt,
+      changeFrequency: "weekly" as const,
+      priority: 0.6,
+    })),
+  ];
+
+  return [...staticPages, ...listingPages, ...articlePages, ...directoryPages];
 }
