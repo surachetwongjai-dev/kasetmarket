@@ -227,6 +227,38 @@ model ReviewReport {
   @@index([resolved, createdAt])
 }
 
+// P1: ราคากลางสินค้าเกษตรรายวัน (PLAN-PHASE2 กลุ่ม P)
+model PriceItem {
+  id           String       @id @default(cuid())
+  slug         String       @unique // ไทย เช่น "ไข่ไก่คละหน้าฟาร์ม" (URL P2)
+  name         String
+  category     String // จาก config/priceCategories.ts
+  unit         String // "บาท/กก." "บาท/ฟอง" "บาท/ตัน" (แสดงผลตรงๆ)
+  sourceName   String? // แหล่งอ้างอิงหลัก เช่น "สำนักงานเศรษฐกิจการเกษตร"
+  sourceUrl    String?
+  mocProductId String? // map กับ product_id ของ MOC สำหรับ import อัตโนมัติ (P3)
+  active       Boolean      @default(true)
+  order        Int          @default(0)
+  entries      PriceEntry[]
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  @@index([active, category, order])
+}
+
+model PriceEntry {
+  id       String    @id @default(cuid())
+  item     PriceItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  itemId   String
+  date     DateTime  @db.Date
+  priceMin Decimal
+  priceMax Decimal? // ราคาเดียวใส่ min อย่างเดียว
+  note     String?
+
+  @@unique([itemId, date])
+  @@index([itemId, date(sort: Desc)])
+}
+
 // T3: คำขอยืนยันตัวตน — ตรวจหลักฐานนอกระบบ (LINE OA) แล้วบันทึกแค่ผล+วิธี
 // ⚠️ ห้ามเก็บไฟล์บัตร/เอกสารในระบบเด็ดขาด (PDPA — PLAN-PHASE2 §8)
 model VerificationRequest {

@@ -2,11 +2,38 @@
 
 > อัปเดตหลังจบทุก milestone — session ใหม่อ่านไฟล์นี้คู่กับ CLAUDE.md + PLAN.md
 
-- **Milestone ปัจจุบัน:** Phase 2 — **กลุ่ม T (Trust) เสร็จครบ: T1 คำเตือนตัวกลาง + T2 รีวิวผู้ขาย + T3 ยืนยันตัวตน ✅** · ก้อนถัดไปตามแผน = **กลุ่ม P (ราคากลางสินค้าเกษตร) — P1**
-- **⚙️ Feature flag:** `FLAGS.REVIEWS = false` (T2 สร้างเสร็จ+เทสผ่านแล้ว แต่ยังปิดไว้ตามแผน — เปิดเป็น `true` ใน `src/config/flags.ts` เมื่อพร้อมใช้) · **T3 verify ไม่มี flag — เปิดใช้ทันที**
-- **⚠️ migration ค้างสำหรับ prod (4 ตัว):** `add_shop_directory` · `add_contact_reveal` · `add_seller_reviews` · `add_verification_request` — ตอน deploy: `npx dotenv-cli -e .env.production-db -- npx prisma migrate deploy`
+- **Milestone ปัจจุบัน:** Phase 2 — **กลุ่ม T (Trust) เสร็จครบ** + **P1 (ราคากลาง: schema + admin CMS กรอกราคา) ✅** · ก้อนถัดไปตามแผน = **P2 (หน้า public ราคากลาง + SEO)**
+- **⚙️ Feature flag:** `FLAGS.REVIEWS = false` (T2 เปิดเมื่อพร้อม) · T3 verify ไม่มี flag · `FLAGS.PRICES = false` (คุมหน้า public P2 — admin CMS P1 เปิดใช้ได้เลยไม่ผูก flag)
+- **⚠️ migration ค้างสำหรับ prod (5 ตัว):** `add_shop_directory` · `add_contact_reveal` · `add_seller_reviews` · `add_verification_request` · `add_price_tables` — ตอน deploy: `npx dotenv-cli -e .env.production-db -- npx prisma migrate deploy` แล้วรัน `npx dotenv-cli -e .env.production-db -- npx tsx scripts/seed-price-items.ts` (seed 26 รายการราคา)
 - **โดเมนจริง:** taladkaset.com (ผู้ใช้แจ้ง 2026-07-12) — ตั้ง `NEXT_PUBLIC_SITE_URL=https://taladkaset.com` ตอน deploy; แบรนด์ในโค้ดยังเป็น "KasetMarket" ถ้าจะรีแบรนด์ต้องสั่งเป็นงานแยก
 - **อัปเดตล่าสุด:** 2026-07-12
+
+---
+
+## Phase 2 — P1: Price schema + admin daily entry ✅ (2026-07-12)
+
+> สเปค PLAN-PHASE2.md §3 กลุ่ม P (P1) — admin CMS กรอกราคา (หน้า public = P2) · admin-only ไม่ผูก flag
+
+### สิ่งที่ทำ
+
+- **Schema:** `PriceItem` (slug ไทย, category, unit, sourceName/Url, mocProductId เผื่อ P3, active, order) + `PriceEntry` (`@@unique([itemId, date])`, priceMin/priceMax Decimal, date `@db.Date`) · migration `20260712040000_add_price_tables` (gen ด้วย `migrate diff` ให้ตรง Prisma เป๊ะ — **apply dev DB แล้ว, prod ยังไม่**)
+- **`config/priceCategories.ts`:** 6 หมวด (ข้าว-พืชไร่/ผัก/ผลไม้/ปศุสัตว์/ประมง/อื่นๆ) value ascii + label + icon
+- **`scripts/seed-price-items.ts`:** upsert 26 รายการเริ่มต้นตาม slug (รันซ้ำได้ ไม่แตะราคาเดิม) — ข้าวเปลือก 3 ชนิด/มัน/ข้าวโพด/อ้อย/ยาง/ปาล์ม/ทุเรียน/มังคุด/ลำไย/สุกร/ไก่/**ไข่ไก่คละ**/โค/ปลานิล/ปลาดุก/กุ้งขาว ฯลฯ พร้อม unit + sourceName · **รันกับ dev DB แล้ว (26 รายการ)**
+- **`features/prices/`:** schemas (zod item + date), queries (getItemsForDailyEntry prefill ค่าล่าสุด ≤ วันที่, getAllPriceItems, bangkokTodayStr), actions (**saveDailyPricesAction** bulk upsert ตาม date + create/update/toggle-active item), components (price-entry-form, price-item-form)
+- **`/admin/prices`:** หน้ากรอกรายวันตารางเดียวจบ — เลือกวันที่ (prefill ค่าล่าสุดของเมื่อวาน + ป้าย "ค่าเมื่อ <วันที่>"), min/max ต่อแถวจัดกลุ่มตามหมวด, ปุ่มบันทึกทีเดียว (sticky), ช่องว่าง = ไม่บันทึก · **`/admin/prices/items`:** เพิ่ม/แก้/เปิด-ปิด active · แท็บ "ราคากลาง" ใน admin
+- Server Action + zod, admin only (ราคา > 0, max ≥ min, กรอง itemId ปลอม)
+
+### ทดสอบแล้ว (E2E บน `next start` prod build + dev DB — 10/10 ผ่าน)
+
+- [x] admin กรอกราคา 5 รายการ+บันทึก → **ลง DB 5 แถว วันที่ถูก** + ค่าตรงที่กรอก (min/max)
+- [x] **กรอกซ้ำวันเดิม = ทับค่าเดิม ไม่ duplicate** (ยัง 5 แถว, ค่าอัปเดต)
+- [x] **prefill วันถัดไปโชว์ค่าเมื่อวาน** + ป้าย "ค่าเมื่อ 2020-01-02"
+- [x] validation `max < min` → ไม่บันทึก · `npm run build` ผ่าน — ข้อมูลทดสอบล้าง (คง 26 รายการ catalog, 0 entry)
+
+### งานที่เหลือ
+
+- [ ] (ฝั่งคุณ) เริ่มกรอกราคาจริงรายวัน ~10 นาที/วัน ที่ `/admin/prices` (ดู CLAUDE.md — ตลาดไท/สี่มุมเมือง อ้างอิงได้ ห้าม scrape)
+- [ ] **P2 ถัดไป:** หน้า public `/ราคาสินค้าเกษตร` + `[slug]` (ISR, ลูกศรเปลี่ยนแปลง, sparkline, JSON-LD Dataset) หลัง `FLAGS.PRICES`
 
 ---
 

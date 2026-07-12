@@ -12,6 +12,7 @@ const TABS = [
   { href: "/admin/verifications", label: "ยืนยันตัวตน" },
   { href: "/admin/reports", label: "รายงาน" },
   ...(FLAGS.REVIEWS ? [{ href: "/admin/reviews", label: "รีวิว" }] : []),
+  { href: "/admin/prices", label: "ราคากลาง" },
   { href: "/admin/listings", label: "ประกาศ" },
   { href: "/admin/articles", label: "บทความ" },
   { href: "/admin/shops", label: "ร้านค้า" },

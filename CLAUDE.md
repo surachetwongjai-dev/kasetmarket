@@ -284,6 +284,7 @@ npm run build        # ต้องผ่านก่อน commit milestone
 npx prisma migrate dev --name <ชื่อ>
 npx prisma studio    # ดูข้อมูล
 npx tsx scripts/seed-shops.ts <ไฟล์.csv>   # seed ร้านค้า directory จาก CSV (รันซ้ำได้ ไม่ duplicate)
+npx tsx scripts/seed-price-items.ts        # seed 26 รายการราคากลาง (upsert ตาม slug, รันซ้ำได้ ไม่แตะราคาเดิม)
 ```
 
 **⚠️ env files:** `.env` = dev · `.env.production-db` = DB production (ใช้กับสคริปต์ผ่าน `dotenv-cli` เท่านั้น)
