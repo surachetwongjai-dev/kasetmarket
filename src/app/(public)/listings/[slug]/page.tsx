@@ -13,6 +13,7 @@ import { ListingGallery } from "@/features/listings/components/listing-gallery";
 import { ContactButtons } from "@/features/listings/components/contact-buttons";
 import { PriceTag } from "@/features/listings/components/price-tag";
 import { ViewTracker } from "@/features/listings/components/view-tracker";
+import { SafetyNotice } from "@/features/trust/components/safety-notice";
 import { ReportButton } from "@/features/moderation/components/report-button";
 import { getShopsForListing } from "@/features/directory/queries";
 import { ShopCard } from "@/features/directory/components/shop-card";
@@ -161,15 +162,13 @@ export default async function ListingDetailPage({ params }: Props) {
             </p>
           </Link>
 
+          <SafetyNotice variant="banner" />
+
           <ContactButtons
             phone={listing.contactPhone}
             line={listing.contactLine}
+            revealEndpoint={`/api/listings/${listing.id}/reveal`}
           />
-
-          <p className="text-xs leading-relaxed text-muted-foreground">
-            ⚠️ เพื่อความปลอดภัย: นัดดูสินค้าก่อนโอน อย่าโอนมัดจำให้คนที่ไม่เคยเจอ
-            และตรวจสินค้าให้ดีก่อนจ่ายเงิน
-          </p>
         </aside>
       </div>
 

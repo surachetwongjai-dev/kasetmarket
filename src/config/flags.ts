@@ -7,10 +7,20 @@ export const FLAGS = {
   SHOP_DIRECTORY: false,
   /** บันทึกประกาศ/Favorites (Phase 2) */
   FAVORITES: false,
-  /** ราคาตลาดกลางรายวัน (Phase 2) */
-  MARKET_PRICES: false,
-  /** ฟอรัมถามตอบ (Phase 2) */
-  FORUM: false,
+
+  // ── Phase 2 (PLAN-PHASE2.md §1.4) — สร้างเสร็จค่อยเปิดทีละตัว ──
+  /** รีวิว/ให้คะแนนผู้ขาย (กลุ่ม T) */
+  REVIEWS: false,
+  /** ราคากลางสินค้าเกษตรรายวัน (กลุ่ม P) */
+  PRICES: false,
+  /** โปรไฟล์เกษตรกร (ฟาร์ม/ไร่/ร้าน) (กลุ่ม U) */
+  FARM_PROFILE: false,
+  /** กระดานจับคู่ซื้อขาย Demand & Supply (กลุ่ม B) */
+  MATCHING: false,
+  /** ชุมชนพูดคุยปัญหาเกษตร (กลุ่ม C) */
+  COMMUNITY: false,
+  /** เช็คค่าขนส่งทุกค่าย (กลุ่ม S) */
+  SHIPPING_RATES: false,
 } as const;
 
 export type FlagKey = keyof typeof FLAGS;

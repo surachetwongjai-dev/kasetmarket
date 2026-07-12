@@ -17,6 +17,7 @@ import {
 } from "@/features/directory/paths";
 import { ListingGallery } from "@/features/listings/components/listing-gallery";
 import { ContactButtons } from "@/features/listings/components/contact-buttons";
+import { SafetyNotice } from "@/features/trust/components/safety-notice";
 import { ListingCard } from "@/features/listings/components/listing-card";
 import { ArticleCard } from "@/features/articles/components/article-card";
 import {
@@ -206,6 +207,8 @@ export default async function ShopProfilePage(props: Props) {
               )}
             </div>
           </div>
+
+          <SafetyNotice variant="banner" />
 
           <ContactButtons phone={shop.phone} line={shop.lineId} />
 

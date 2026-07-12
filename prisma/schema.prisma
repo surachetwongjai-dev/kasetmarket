@@ -41,6 +41,7 @@ model User {
   accounts      Account[]
   listings      Listing[]
   reports       Report[]
+  contactReveals ContactReveal[] // เหตุการณ์กดดูช่องทางติดต่อของ user นี้ (ฐาน gate รีวิว T2)
 }
 
 // OAuth account linking (Auth.js Prisma adapter) — LINE / Google
@@ -85,6 +86,7 @@ model Listing {
   seller       User           @relation(fields: [sellerId], references: [id], onDelete: Cascade)
   sellerId     String
   reports      Report[]
+  contactReveals ContactReveal[]
   createdAt    DateTime       @default(now())
   updatedAt    DateTime       @updatedAt
 
@@ -172,4 +174,19 @@ model Report {
   createdAt  DateTime @default(now())
 
   @@index([resolved, createdAt])
+}
+
+// Trust & Safety (Phase 2 — PLAN-PHASE2.md กลุ่ม T)
+// T0: log เหตุการณ์กดดูช่องทางติดต่อ (โทร/LINE) — ใช้เป็นฐาน gate รีวิว (T2) + สถิติ
+model ContactReveal {
+  id        String   @id @default(cuid())
+  listing   Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  listingId String
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  userId    String? // null = คนไม่ล็อกอิน (log ไว้เป็นสถิติ แต่ใช้ gate รีวิวไม่ได้)
+  channel   String // "phone" | "line"
+  createdAt DateTime @default(now())
+
+  @@index([listingId])
+  @@index([userId, createdAt])
 }

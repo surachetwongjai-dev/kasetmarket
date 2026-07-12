@@ -2,6 +2,7 @@ import Link from "next/link";
 
 const FOOTER_LINKS = [
   { href: "/about", label: "เกี่ยวกับเรา" },
+  { href: "/safety", label: "วิธีซื้อขายปลอดภัย" },
   { href: "/privacy", label: "นโยบายความเป็นส่วนตัว" },
   { href: "/terms", label: "ข้อตกลงการใช้งาน" },
 ];

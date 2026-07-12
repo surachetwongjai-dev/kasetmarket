@@ -2,9 +2,37 @@
 
 > อัปเดตหลังจบทุก milestone — session ใหม่อ่านไฟล์นี้คู่กับ CLAUDE.md + PLAN.md
 
-- **Milestone ปัจจุบัน:** Phase 1.5 Directory ✅ เสร็จ · **แผน Phase 2 (6 ระบบ, 13 milestones) เขียนแล้วที่ `PLAN-PHASE2.md`** — พร้อมเริ่ม T0+T1 (Trust) เป็นก้อนแรก
+- **Milestone ปัจจุบัน:** Phase 2 เริ่มแล้ว — **T1 (Trust: คำเตือนตัวกลาง + ContactReveal log) ✅ เสร็จ** · ก้อนถัดไปตามแผน = **T2 (ระบบรีวิวผู้ขาย)**
 - **โดเมนจริง:** taladkaset.com (ผู้ใช้แจ้ง 2026-07-12) — ตั้ง `NEXT_PUBLIC_SITE_URL=https://taladkaset.com` ตอน deploy; แบรนด์ในโค้ดยังเป็น "KasetMarket" ถ้าจะรีแบรนด์ต้องสั่งเป็นงานแยก
 - **อัปเดตล่าสุด:** 2026-07-12
+
+---
+
+## Phase 2 — T1: Safety notices + Contact reveal log ✅ (2026-07-12)
+
+> สเปค PLAN-PHASE2.md §2 กลุ่ม T (T0+T1 ทำรวมใน session เดียว) — กติการ่วม §1 ใช้ครบ
+
+### สิ่งที่ทำ
+
+- **`config/flags.ts`**: เพิ่ม 6 flags Phase 2 (ปิดหมด) — `REVIEWS`, `PRICES`, `FARM_PROFILE`, `MATCHING`, `COMMUNITY`, `SHIPPING_RATES` (แทน placeholder เดิม `MARKET_PRICES`/`FORUM` ที่ไม่ถูกอ้างถึง — ตั้งชื่อตรงกับที่ milestone หลังๆ อ้าง). คำเตือนตัวกลาง **ไม่มี flag** (เปิดใช้ทันทีตามสเปค)
+- **`features/trust/components/safety-notice.tsx`**: คอมโพเนนต์เดียว 2 variant (ไม่มี hook → ใช้ได้ทั้ง server/client) — `banner` การ์ดเหลืองทอง + ลิงก์ "วิธีซื้อขายปลอดภัย", `pre-reveal` ข้อความสั้นบังคับเห็นก่อนเบอร์โผล่
+- **`ContactReveal`** model + migration `20260712010000_add_contact_reveal` (**apply dev DB แล้ว — prod ยังไม่**), back-relation ที่ `User.contactReveals` + `Listing.contactReveals` · `POST /api/listings/[id]/reveal?channel=phone|line` — เก็บ `userId` ถ้าล็อกอิน (จาก `auth()`), rate limit IP in-memory 60/ชม., FK error (id ประกาศไม่มี) = เงียบ ไม่ throw
+- **`ContactButtons`** เพิ่ม prop `revealEndpoint?` (backward-compatible): กด "แสดงเบอร์โทร" → เห็นคำเตือน `pre-reveal` + ปุ่ม "เข้าใจแล้ว ดูเบอร์" → เบอร์โผล่ (2 จังหวะ), ยิง reveal beacon ตอนยืนยันดูเบอร์ + ตอนกด LINE (dedupe ต่อ session ด้วย sessionStorage แพทเทิร์นเดียวกับ ViewTracker) — หน้าประกาศส่ง endpoint (log), หน้าร้าน directory ไม่ส่ง (แค่เตือน ไม่มี Listing ให้ผูก)
+- **หน้า `/safety`** ("วิธีซื้อขายปลอดภัย"): banner + 10 ข้อควรทำ + สัญญาณเตือนมิจฉาชีพ + ช่องทางแจ้งความ (ไซเบอร์ 1441/thaipoliceonline, สคบ. 1166, อายัดบัญชี) — indexable, ลิงก์จาก footer
+- วาง banner: หน้าประกาศรายตัว (**แทนข้อความเตือน `⚠️` เดิม**) + หน้าร้าน directory (เหนือปุ่มติดต่อ)
+
+### ทดสอบแล้ว (E2E บน `next start` prod build + dev DB)
+
+- [x] หน้าประกาศ 200 + มี banner "taladkaset เป็นตัวกลาง..." + ปุ่ม "แสดงเบอร์โทร" + **เบอร์จริงไม่อยู่ใน HTML ก่อนกด** (กัน scraping) + reveal endpoint ผูกถูก listing id
+- [x] footer มีลิงก์ `href="/safety"` · `/safety` 200 + มีคู่มือ + ช่องทางแจ้งความ 1441
+- [x] **reveal log ลง DB ทั้ง 2 เคส**: ไม่ล็อกอิน → `channel=phone, userId=null` · ล็อกอิน admin → `channel=line, userId=<admin>`
+- [x] `channel` ผิด → 400 · หน้าร้าน/hub 200
+- [x] `npm run build` ผ่าน (`/safety` เป็น static ○) — ข้อมูลทดสอบล้างแล้ว
+
+### งานที่เหลือ
+
+- [ ] ตอน deploy prod: `npx dotenv-cli -e .env.production-db -- npx prisma migrate deploy` (มี migration `add_contact_reveal` ค้างสำหรับ prod — เพิ่มจาก `add_shop_directory` ที่ยังค้างอยู่)
+- [ ] (ฝั่งคุณ) ตั้ง LINE OA รับหลักฐาน verify ก่อนทำ T3 · เกณฑ์ว่าอะไรถึงผ่าน verify
 
 ---
 
