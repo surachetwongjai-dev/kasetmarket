@@ -192,6 +192,32 @@ export async function getArticlesForListingCategories(
   });
 }
 
+// ---------- แอดมิน (D5) — เห็นทุกสถานะ ----------
+
+/** คิวร้านรอตรวจ (เก่าสุดขึ้นก่อน — แพทเทิร์นเดียวกับคิวประกาศ M7) */
+export async function getPendingShops() {
+  return prisma.shop.findMany({
+    where: { status: "PENDING" },
+    orderBy: { createdAt: "asc" },
+    include: { images: { orderBy: { order: "asc" } } },
+  });
+}
+
+/** ร้านทั้งหมดทุกสถานะ (จัดการ/แก้ไข/featured) */
+export async function getAllShopsForAdmin() {
+  return prisma.shop.findMany({
+    orderBy: [{ status: "asc" }, { createdAt: "desc" }],
+    include: { images: { orderBy: { order: "asc" }, take: 1 } },
+  });
+}
+
+export async function getShopForEdit(id: string) {
+  return prisma.shop.findUnique({
+    where: { id },
+    include: { images: { orderBy: { order: "asc" } } },
+  });
+}
+
 /** ร้านทั้งหมดสำหรับ sitemap (D4) */
 export async function getAllApprovedShops() {
   return prisma.shop.findMany({

@@ -46,19 +46,39 @@ const nextConfig: NextConfig = {
   // (percent-encoded request จาก browser จริงคืน 404 — ทดสอบแล้วกับ next start)
   async rewrites() {
     // ต้องมีทั้งรูป percent-encoded (browser/crawler ส่งจริง) และรูป literal (บาง client ส่ง raw bytes)
-    const encoded = encodeURIComponent("ร้านค้า");
-    return [
-      { source: `/${encoded}`, destination: "/shops" },
-      { source: `/${encoded}/:path*`, destination: "/shops/:path*" },
-      { source: "/ร้านค้า", destination: "/shops" },
-      { source: "/ร้านค้า/:path*", destination: "/shops/:path*" },
+    const thaiRoutes: [string, string][] = [
+      ["ร้านค้า", "/shops"],
+      ["ลงทะเบียนร้านค้า", "/register-shop"],
     ];
+    // กฎเฉพาะต้องมาก่อนกฎ :path* (first match wins): /ลงทะเบียนร้านค้า/สำเร็จ → หน้า success
+    const successSource = `/${encodeURIComponent("ลงทะเบียนร้านค้า")}/${encodeURIComponent("สำเร็จ")}`;
+    const explicit = [
+      { source: successSource, destination: "/register-shop/success" },
+      { source: "/ลงทะเบียนร้านค้า/สำเร็จ", destination: "/register-shop/success" },
+    ];
+    return explicit.concat(
+      thaiRoutes.flatMap(([thai, internal]) => {
+      const encoded = encodeURIComponent(thai);
+      return [
+        { source: `/${encoded}`, destination: internal },
+        { source: `/${encoded}/:path*`, destination: `${internal}/:path*` },
+        { source: `/${thai}`, destination: internal },
+        { source: `/${thai}/:path*`, destination: `${internal}/:path*` },
+      ];
+      }),
+    );
   },
-  // กันเข้าถึง /shops ตรงๆ ซ้ำกับ URL ไทย (duplicate content) — เด้งกลับ URL หลัก
+  // กันเข้าถึง path ภายในตรงๆ ซ้ำกับ URL ไทย (duplicate content) — เด้งกลับ URL หลัก
   async redirects() {
     return [
       { source: "/shops", destination: "/ร้านค้า", permanent: true },
       { source: "/shops/:path*", destination: "/ร้านค้า/:path*", permanent: true },
+      { source: "/register-shop", destination: "/ลงทะเบียนร้านค้า", permanent: true },
+      {
+        source: "/register-shop/:path*",
+        destination: "/ลงทะเบียนร้านค้า/:path*",
+        permanent: true,
+      },
     ];
   },
 };

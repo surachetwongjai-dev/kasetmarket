@@ -22,21 +22,25 @@ type Item = {
   file?: File; // เก็บไว้เผื่อ retry เมื่ออัปล้ม
 };
 
-const MAX_IMAGES = 6;
-
 export function ImageUploader({
   onChange,
   disabled,
   initial,
+  max: maxImages = 6,
+  endpoint = "/api/upload",
 }: {
   /** เรียกทุกครั้งที่รายการรูป (ที่อัปเสร็จแล้ว) เปลี่ยน — เรียงตามลำดับแสดงผล */
   onChange: (images: UploadedImage[]) => void;
   disabled?: boolean;
   /** รูปเดิมของประกาศ (โหมดแก้ไข) — ใช้ค่าตอน mount ครั้งแรกเท่านั้น */
   initial?: UploadedImage[];
+  /** จำนวนรูปสูงสุด (ประกาศ 6, ร้านค้า directory 4) */
+  max?: number;
+  /** API ขอ upload URL — ฟอร์มลงทะเบียนร้าน (ไม่ล็อกอิน) ใช้ /api/upload/shop */
+  endpoint?: string;
 }) {
   const [items, setItems] = useState<Item[]>(() =>
-    (initial ?? []).slice(0, MAX_IMAGES).map((img) => ({
+    (initial ?? []).slice(0, maxImages).map((img) => ({
       id: crypto.randomUUID(),
       previewUrl: img.url,
       progress: 100,
@@ -75,7 +79,7 @@ export function ImageUploader({
 
   async function handleFiles(files: FileList | null) {
     if (!files?.length) return;
-    const room = MAX_IMAGES - items.length;
+    const room = maxImages - items.length;
     const selected = Array.from(files).slice(0, room);
 
     for (const file of selected) {
@@ -94,7 +98,7 @@ export function ImageUploader({
     try {
       const { blob, contentType } = await compressImage(file);
 
-      const res = await fetch("/api/upload", {
+      const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ contentType, size: blob.size }),
@@ -234,7 +238,7 @@ export function ImageUploader({
           </div>
         ))}
 
-        {items.length < MAX_IMAGES && (
+        {items.length < maxImages && (
           <button
             type="button"
             disabled={disabled}
@@ -248,7 +252,7 @@ export function ImageUploader({
       </div>
 
       <p className="text-xs text-muted-foreground">
-        สูงสุด {MAX_IMAGES} รูป — รูปแรกคือรูปปก ลากหรือใช้ปุ่มลูกศรเพื่อเรียงลำดับ
+        สูงสุด {maxImages} รูป — รูปแรกคือรูปปก ลากหรือใช้ปุ่มลูกศรเพื่อเรียงลำดับ
         (รูปถูกย่อขนาดอัตโนมัติ อัปจากมือถือได้เลย)
       </p>
 

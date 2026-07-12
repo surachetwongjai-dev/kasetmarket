@@ -13,6 +13,8 @@ export {
 } from "./queries";
 export { ShopCard } from "./components/shop-card";
 export { ShopFilters } from "./components/shop-filters";
+export { ShopForm } from "./components/shop-form";
+export { shopSchema, MAX_SHOP_IMAGES } from "./schemas";
 export { DIRECTORY_BASE, provincePath, categoryPath, shopPath } from "./paths";
 export {
   absoluteUrl,

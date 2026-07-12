@@ -55,12 +55,22 @@ export default async function DirectoryPage({
 
   return (
     <main className="mx-auto w-full max-w-6xl px-4 py-6">
-      <h1 className="font-heading text-xl font-bold text-primary-dk sm:text-2xl">
-        {headline}
-      </h1>
-      <p className="mt-1 text-sm text-muted-foreground">
-        พบ {total.toLocaleString("th-TH")} ร้าน
-      </p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="font-heading text-xl font-bold text-primary-dk sm:text-2xl">
+            {headline}
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            พบ {total.toLocaleString("th-TH")} ร้าน
+          </p>
+        </div>
+        <Link
+          href="/ลงทะเบียนร้านค้า"
+          className="flex h-11 shrink-0 items-center rounded-lg bg-accent px-4 font-semibold text-white transition-colors hover:bg-accent/90"
+        >
+          + ลงทะเบียนร้านฟรี
+        </Link>
+      </div>
 
       <div className="mt-4">
         <ShopFilters params={params} />
