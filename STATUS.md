@@ -2,10 +2,35 @@
 
 > อัปเดตหลังจบทุก milestone — session ใหม่อ่านไฟล์นี้คู่กับ CLAUDE.md + PLAN.md
 
-- **Milestone ปัจจุบัน:** Phase 2 — **T1 (คำเตือนตัวกลาง) + T2 (รีวิวผู้ขาย) ✅ เสร็จ** · ก้อนถัดไปตามแผน = **T3 (Verify flow เต็มระบบ)**
-- **⚙️ Feature flag:** `FLAGS.REVIEWS = false` (T2 สร้างเสร็จ+เทสผ่านแล้ว แต่ยังปิดไว้ตามแผน — เปิดเป็น `true` ใน `src/config/flags.ts` เมื่อพร้อมใช้ ไม่ต้องแก้โค้ดอื่น)
+- **Milestone ปัจจุบัน:** Phase 2 — **กลุ่ม T (Trust) เสร็จครบ: T1 คำเตือนตัวกลาง + T2 รีวิวผู้ขาย + T3 ยืนยันตัวตน ✅** · ก้อนถัดไปตามแผน = **กลุ่ม P (ราคากลางสินค้าเกษตร) — P1**
+- **⚙️ Feature flag:** `FLAGS.REVIEWS = false` (T2 สร้างเสร็จ+เทสผ่านแล้ว แต่ยังปิดไว้ตามแผน — เปิดเป็น `true` ใน `src/config/flags.ts` เมื่อพร้อมใช้) · **T3 verify ไม่มี flag — เปิดใช้ทันที**
+- **⚠️ migration ค้างสำหรับ prod (4 ตัว):** `add_shop_directory` · `add_contact_reveal` · `add_seller_reviews` · `add_verification_request` — ตอน deploy: `npx dotenv-cli -e .env.production-db -- npx prisma migrate deploy`
 - **โดเมนจริง:** taladkaset.com (ผู้ใช้แจ้ง 2026-07-12) — ตั้ง `NEXT_PUBLIC_SITE_URL=https://taladkaset.com` ตอน deploy; แบรนด์ในโค้ดยังเป็น "KasetMarket" ถ้าจะรีแบรนด์ต้องสั่งเป็นงานแยก
 - **อัปเดตล่าสุด:** 2026-07-12
+
+---
+
+## Phase 2 — T3: Verification request flow ✅ (2026-07-12)
+
+> สเปค PLAN-PHASE2.md §2 กลุ่ม T (T3) — **ไม่มี flag เปิดใช้ทันที** · ปิดกลุ่ม Trust ครบ
+
+### สิ่งที่ทำ
+
+- **Schema:** `VerificationRequest` (`userId @unique` = 1 คำขอ/user, `note` ของผู้ขอ, `method` วิธีตรวจของแอดมิน, `rejectReason`, `status` PENDING/APPROVED/REJECTED, `reviewedAt`) + back-relation `User.verificationRequest` · migration `20260712030000_add_verification_request` (**apply dev DB แล้ว — prod ยังไม่**)
+- **`features/trust/`:** schemas (verificationRequest/approve/reject zod), queries (getMyVerificationRequest, getVerificationsForAdmin, getOpenVerificationCount), actions (submit upsert→PENDING / approve บังคับ method→`User.verified=true` ใน transaction / reject บังคับ reason), components (verify-card, verify-admin-actions)
+- **Dashboard ผู้ขาย:** การ์ด "ยืนยันตัวตน" — อธิบายประโยชน์ (badge ✓ + ประกาศขึ้นทันที) → ฟอร์ม note → PENDING แสดง "ทีมงานจะติดต่อทาง LINE OA ภายใน 2 วัน เตรียมรูปสวน/ฟาร์ม/หน้าร้าน" → REJECTED แสดงเหตุผล + ส่งใหม่ได้ → verified แสดงสถานะยืนยันแล้ว · **ห้ามมีช่องอัปโหลดไฟล์/เอกสาร** (PDPA) มีข้อความบอกชัด
+- **แอดมิน:** แท็บ "ยืนยันตัวตน" + `/admin/verifications` (คิว PENDING เห็นโปรไฟล์+จำนวนประกาศ+รีวิวของผู้ขอ, อนุมัติบังคับกรอก method / ปฏิเสธบังคับเหตุผล — ใช้ `<details>` ให้ฟอร์มอยู่ใน HTML ทำงานได้แม้ไม่มี JS) + การ์ด "คำขอยืนยันตัวตน" ในภาพรวม
+- **`/safety`:** เพิ่ม section "ป้าย ✓ หมายความว่าอะไร" — โปร่งใสว่า verified = ทีมงานตรวจตัวตนเบื้องต้นแล้ว **แต่ไม่ใช่การการันตี** ต้องระวังทุกราย
+- อนุมัติแล้ว `User.verified=true` → กลไก badge + ข้ามคิวประกาศ (M5/M7) ทำงานเอง + revalidate โปรไฟล์/ประกาศ badge ขึ้นทันที
+
+### ทดสอบแล้ว (E2E เต็ม flow บน `next start` prod build + dev DB — 19/19 ผ่าน)
+
+- [x] seller ส่งคำขอ → DB PENDING+note → dashboard โชว์ "รอทีมงานตรวจสอบ" + LINE OA + note (ไม่มีฟอร์มซ้ำ)
+- [x] **ไม่มีช่องอัปโหลดไฟล์ (`type=file`) ทั้งใน dashboard และ /admin/verifications** + มีข้อความบอกห้ามอัปเอกสาร
+- [x] แอดมินอนุมัติ**ไม่กรอก method → ไม่ผ่าน** (DB ไม่เปลี่ยน) · กรอก method → APPROVED + method saved + `User.verified=true`
+- [x] seller dashboard = "ยืนยันตัวตนแล้ว" · โปรไฟล์ public โชว์ badge ✓ ทันที (ประกาศตัวถัดไป ACTIVE ตามกลไก M5 verified)
+- [x] ปฏิเสธพร้อมเหตุผล → REJECTED + user ยังไม่ verified → ผู้ขอเห็นเหตุผล + **ส่งใหม่ได้** → กลับเป็น PENDING เคลียร์เหตุผลเดิม
+- [x] admin overview การ์ด "คำขอยืนยันตัวตน" · `npm run build` ผ่าน — ข้อมูล/สคริปต์ทดสอบล้างหมด
 
 ---
 

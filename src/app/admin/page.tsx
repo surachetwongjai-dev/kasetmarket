@@ -4,15 +4,19 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { getAdminStats } from "@/features/moderation/queries";
 import { FLAGS } from "@/config/flags";
-import { getOpenReviewReportCount } from "@/features/trust";
+import {
+  getOpenReviewReportCount,
+  getOpenVerificationCount,
+} from "@/features/trust";
 
 export const metadata: Metadata = {
   title: "ผู้ดูแลระบบ",
 };
 
 export default async function AdminPage() {
-  const [stats, openReviewReports] = await Promise.all([
+  const [stats, openVerifications, openReviewReports] = await Promise.all([
     getAdminStats(),
+    getOpenVerificationCount(),
     FLAGS.REVIEWS ? getOpenReviewReportCount() : Promise.resolve(0),
   ]);
 
@@ -22,6 +26,12 @@ export default async function AdminPage() {
       value: stats.pendingListings,
       href: "/admin/moderation",
       urgent: stats.pendingListings > 0,
+    },
+    {
+      label: "คำขอยืนยันตัวตน",
+      value: openVerifications,
+      href: "/admin/verifications",
+      urgent: openVerifications > 0,
     },
     {
       label: "รายงานค้างตรวจ",

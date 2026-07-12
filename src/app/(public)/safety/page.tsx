@@ -111,6 +111,24 @@ export default function SafetyPage() {
         </ul>
       </section>
 
+      <section className="mt-8 rounded-xl border border-primary/20 bg-primary/5 p-4">
+        <h2 className="flex items-center gap-2 font-heading text-lg font-bold text-primary-dk">
+          <span className="inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
+            ✓ ยืนยันตัวตน
+          </span>
+          ป้ายนี้หมายความว่าอะไร
+        </h2>
+        <p className="mt-2 text-sm leading-relaxed text-foreground">
+          ผู้ขายที่มีป้าย ✓ คือผู้ที่ทีมงานได้ติดต่อตรวจสอบตัวตนและกิจการเบื้องต้นแล้ว
+          (เช่น วิดีโอคอลดูสวน/ฟาร์ม/หน้าร้านจริง) เพื่อให้คุณมั่นใจมากขึ้นว่ามีตัวตนจริง
+        </p>
+        <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+          <strong className="text-foreground">แต่ป้าย ✓ ไม่ใช่การการันตี</strong>ว่าการซื้อขายทุกครั้งจะปลอดภัย
+          หรือสินค้าจะตรงตามที่ตกลง taladkaset เป็นเพียงตัวกลาง ไม่ได้เป็นคู่สัญญาในการซื้อขาย
+          โปรดใช้ความระมัดระวังและทำตามคำแนะนำด้านบนกับผู้ขายทุกราย ไม่ว่าจะมีป้าย ✓ หรือไม่
+        </p>
+      </section>
+
       <section className="mt-8">
         <h2 className="font-heading text-xl font-bold text-danger">
           🚩 สัญญาณเตือนมิจฉาชีพ

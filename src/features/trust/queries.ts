@@ -117,3 +117,54 @@ export async function getReviewReportsForAdmin() {
 export async function getOpenReviewReportCount(): Promise<number> {
   return prisma.reviewReport.count({ where: { resolved: false } });
 }
+
+// ---------- T3: ยืนยันตัวตน ----------
+
+/** คำขอยืนยันตัวตนของ user (ถ้ามี) — ใช้ในการ์ด dashboard */
+export async function getMyVerificationRequest(userId: string) {
+  return prisma.verificationRequest.findUnique({
+    where: { userId },
+    select: {
+      id: true,
+      note: true,
+      method: true,
+      rejectReason: true,
+      status: true,
+      createdAt: true,
+      reviewedAt: true,
+    },
+  });
+}
+
+/** คิวคำขอยืนยันตัวตน (แอดมิน) — PENDING ก่อน + โปรไฟล์/ประกาศ/รีวิวของผู้ขอ */
+export async function getVerificationsForAdmin() {
+  const requests = await prisma.verificationRequest.findMany({
+    orderBy: [
+      { status: "asc" }, // APPROVED/PENDING/REJECTED เรียงตามตัวอักษร — PENDING อยู่กลาง
+      { createdAt: "asc" },
+    ],
+    where: { status: "PENDING" },
+    take: 100,
+    select: {
+      id: true,
+      note: true,
+      createdAt: true,
+      user: {
+        select: {
+          id: true,
+          name: true,
+          province: true,
+          createdAt: true,
+          verified: true,
+          _count: { select: { listings: true, reviewsReceived: true } },
+        },
+      },
+    },
+  });
+  return requests;
+}
+
+/** จำนวนคำขอยืนยันตัวตนค้างตรวจ (การ์ดภาพรวมแอดมิน) */
+export async function getOpenVerificationCount(): Promise<number> {
+  return prisma.verificationRequest.count({ where: { status: "PENDING" } });
+}

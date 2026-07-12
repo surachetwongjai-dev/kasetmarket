@@ -6,6 +6,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/features/auth";
 import { logoutAction } from "@/features/auth/actions";
+import { prisma } from "@/lib/prisma";
+import { VerifyCard, getMyVerificationRequest } from "@/features/trust";
 import { Badge } from "@/components/ui/badge";
 
 export const metadata: Metadata = {
@@ -17,6 +19,14 @@ export default async function DashboardPage() {
   if (!session) redirect("/login"); // middleware กันแล้ว — ตรวจซ้ำฝั่ง server
 
   const { user } = session;
+
+  const [dbUser, verifyRequest] = await Promise.all([
+    prisma.user.findUnique({
+      where: { id: user.id },
+      select: { verified: true },
+    }),
+    getMyVerificationRequest(user.id),
+  ]);
 
   return (
     <main className="mx-auto w-full max-w-3xl px-4 py-8">
@@ -59,6 +69,13 @@ export default async function DashboardPage() {
             แก้ไข ปิดการขาย ต่ออายุ และดูยอดวิว
           </span>
         </Link>
+      </div>
+
+      <div className="mt-4">
+        <VerifyCard
+          verified={dbUser?.verified ?? false}
+          request={verifyRequest}
+        />
       </div>
     </main>
   );

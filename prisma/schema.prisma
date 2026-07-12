@@ -44,6 +44,7 @@ model User {
   contactReveals ContactReveal[] // เหตุการณ์กดดูช่องทางติดต่อของ user นี้ (ฐาน gate รีวิว T2)
   reviewsReceived SellerReview[] @relation("ReviewsReceived") // รีวิวที่ผู้ขายคนนี้ได้รับ
   reviewsGiven    SellerReview[] @relation("ReviewsGiven")    // รีวิวที่ user คนนี้เขียนให้คนอื่น
+  verificationRequest VerificationRequest? // คำขอยืนยันตัวตน (1 ต่อ user — T3)
 }
 
 // OAuth account linking (Auth.js Prisma adapter) — LINE / Google
@@ -224,4 +225,20 @@ model ReviewReport {
   createdAt DateTime     @default(now())
 
   @@index([resolved, createdAt])
+}
+
+// T3: คำขอยืนยันตัวตน — ตรวจหลักฐานนอกระบบ (LINE OA) แล้วบันทึกแค่ผล+วิธี
+// ⚠️ ห้ามเก็บไฟล์บัตร/เอกสารในระบบเด็ดขาด (PDPA — PLAN-PHASE2 §8)
+model VerificationRequest {
+  id           String    @id @default(cuid())
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId       String    @unique // 1 คำขอ/user (upsert ตอนส่งใหม่หลังถูกปฏิเสธ)
+  note         String?   @db.Text // ผู้ขอเล่าว่าขายอะไร มีหลักฐานอะไร
+  method       String?   // แอดมินบันทึกวิธีตรวจ เช่น "วิดีโอคอล LINE + เห็นสวนจริง"
+  rejectReason String?   @db.Text // เหตุผลปฏิเสธ (ผู้ขอเห็น — ส่งใหม่ได้)
+  status       String    @default("PENDING") // PENDING | APPROVED | REJECTED
+  createdAt    DateTime  @default(now())
+  reviewedAt   DateTime?
+
+  @@index([status, createdAt])
 }

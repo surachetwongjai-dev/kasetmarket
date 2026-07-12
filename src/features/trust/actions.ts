@@ -10,11 +10,15 @@ import {
   reviewSchema,
   sellerReplySchema,
   reviewReportSchema,
+  verificationRequestSchema,
+  verifyApproveSchema,
+  verifyRejectSchema,
   REVIEW_DAILY_LIMIT,
   REVIEW_ELIGIBLE_HOURS,
 } from "./schemas";
 
 export type ReviewFormState = { success?: boolean; error?: string };
+export type VerifyAdminState = { error?: string };
 
 /** เที่ยงคืนวันนี้เวลาไทย (UTC+7) — นับโควต้ารายวัน (แพทเทิร์นเดียวกับ listings/moderation) */
 function startOfBangkokDay(): Date {
@@ -226,4 +230,130 @@ export async function resolveReviewReportAction(formData: FormData) {
     data: { resolved: true },
   });
   revalidatePath("/admin", "layout");
+}
+
+// ---------- T3: ยืนยันตัวตน ----------
+
+/** ผู้ขายส่ง/ส่งใหม่คำขอยืนยันตัวตน (upsert → PENDING) */
+export async function submitVerificationAction(
+  _prev: ReviewFormState,
+  formData: FormData,
+): Promise<ReviewFormState> {
+  const session = await auth();
+  if (!session) return { error: "ต้องเข้าสู่ระบบก่อน" };
+  const userId = session.user.id;
+
+  const parsed = verificationRequestSchema.safeParse({
+    note: formData.get("note") || undefined,
+  });
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "ข้อมูลไม่ถูกต้อง" };
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { verified: true },
+  });
+  if (user?.verified) return { error: "บัญชีของคุณยืนยันตัวตนแล้ว" };
+
+  const existing = await prisma.verificationRequest.findUnique({
+    where: { userId },
+    select: { status: true },
+  });
+  if (existing?.status === "PENDING") {
+    return { error: "คำขอของคุณกำลังรอทีมงานตรวจสอบอยู่" };
+  }
+
+  const note = parsed.data.note ?? null;
+  // ส่งใหม่หลังถูกปฏิเสธ → รีเซ็ตเป็น PENDING เคลียร์ผลเดิม + จับเวลาใหม่ (เข้าคิวท้าย)
+  await prisma.verificationRequest.upsert({
+    where: { userId },
+    create: { userId, note },
+    update: {
+      note,
+      status: "PENDING",
+      method: null,
+      rejectReason: null,
+      reviewedAt: null,
+      createdAt: new Date(),
+    },
+  });
+
+  revalidatePath("/dashboard");
+  revalidatePath("/admin", "layout");
+  return { success: true };
+}
+
+/** แอดมินอนุมัติคำขอ (บังคับกรอกวิธีตรวจ) → User.verified=true */
+export async function approveVerificationAction(
+  _prev: VerifyAdminState,
+  formData: FormData,
+): Promise<VerifyAdminState> {
+  await requireAdmin();
+  const parsed = verifyApproveSchema.safeParse({
+    id: formData.get("id"),
+    method: formData.get("method"),
+  });
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "ข้อมูลไม่ถูกต้อง" };
+  }
+
+  const req = await prisma.verificationRequest.findUnique({
+    where: { id: parsed.data.id },
+    select: { userId: true },
+  });
+  if (!req) return { error: "ไม่พบคำขอนี้" };
+
+  await prisma.$transaction([
+    prisma.verificationRequest.update({
+      where: { id: parsed.data.id },
+      data: {
+        status: "APPROVED",
+        method: parsed.data.method,
+        rejectReason: null,
+        reviewedAt: new Date(),
+      },
+    }),
+    prisma.user.update({
+      where: { id: req.userId },
+      data: { verified: true },
+    }),
+  ]);
+
+  revalidatePath("/admin", "layout");
+  await revalidateSellerSurfaces(req.userId); // badge ✓ ขึ้นทุกจุด
+  return {};
+}
+
+/** แอดมินปฏิเสธคำขอ (บังคับเหตุผล — ผู้ขอเห็น ส่งใหม่ได้) */
+export async function rejectVerificationAction(
+  _prev: VerifyAdminState,
+  formData: FormData,
+): Promise<VerifyAdminState> {
+  await requireAdmin();
+  const parsed = verifyRejectSchema.safeParse({
+    id: formData.get("id"),
+    reason: formData.get("reason"),
+  });
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "ข้อมูลไม่ถูกต้อง" };
+  }
+
+  const req = await prisma.verificationRequest.findUnique({
+    where: { id: parsed.data.id },
+    select: { id: true },
+  });
+  if (!req) return { error: "ไม่พบคำขอนี้" };
+
+  await prisma.verificationRequest.update({
+    where: { id: parsed.data.id },
+    data: {
+      status: "REJECTED",
+      rejectReason: parsed.data.reason,
+      reviewedAt: new Date(),
+    },
+  });
+
+  revalidatePath("/admin", "layout");
+  return {};
 }

@@ -39,3 +39,32 @@ export const reviewReportSchema = z.object({
   reviewId: z.string().min(1),
   reason: z.enum(REVIEW_REPORT_REASONS, { message: "กรุณาเลือกเหตุผล" }),
 });
+
+// ยืนยันตัวตน (T3) — ไม่มีช่องอัปโหลดไฟล์ (PDPA) มีแค่ note ข้อความ
+export const MAX_VERIFY_NOTE = 1000;
+
+export const verificationRequestSchema = z.object({
+  note: z
+    .string()
+    .trim()
+    .max(MAX_VERIFY_NOTE, "ข้อความยาวเกินไป")
+    .optional(),
+});
+
+export const verifyApproveSchema = z.object({
+  id: z.string().min(1),
+  method: z
+    .string()
+    .trim()
+    .min(3, "กรุณาบันทึกวิธีที่ใช้ตรวจ (อย่างน้อย 3 ตัวอักษร)")
+    .max(300),
+});
+
+export const verifyRejectSchema = z.object({
+  id: z.string().min(1),
+  reason: z
+    .string()
+    .trim()
+    .min(5, "กรุณาบอกเหตุผลให้ผู้ขอเข้าใจ (อย่างน้อย 5 ตัวอักษร)")
+    .max(500),
+});
