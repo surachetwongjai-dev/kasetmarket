@@ -19,6 +19,11 @@ import {
   getSellerReviews,
   getReviewEligibility,
 } from "@/features/trust";
+import {
+  FarmProfileSection,
+  hasFarmContent,
+  getFarmProfile,
+} from "@/features/profile";
 import { formatThaiDate } from "@/lib/format";
 
 type Props = { params: Promise<{ id: string }> };
@@ -43,7 +48,7 @@ export default async function SellerProfilePage({ params }: Props) {
   const viewerId = session?.user?.id ?? null;
   const isSeller = viewerId === seller.id;
 
-  const [listings, review] = await Promise.all([
+  const [listings, review, farm] = await Promise.all([
     getSellerActiveListings(id),
     FLAGS.REVIEWS
       ? Promise.all([
@@ -56,6 +61,7 @@ export default async function SellerProfilePage({ params }: Props) {
           eligibility,
         }))
       : Promise.resolve(null),
+    FLAGS.FARM_PROFILE ? getFarmProfile(id) : Promise.resolve(null),
   ]);
 
   return (
@@ -102,8 +108,12 @@ export default async function SellerProfilePage({ params }: Props) {
         </div>
       </header>
 
+      {hasFarmContent(farm) && (
+        <FarmProfileSection profile={farm} sellerName={seller.name} />
+      )}
+
       <h2 className="mt-8 font-heading text-lg font-semibold text-primary-dk">
-        ประกาศที่กำลังขาย
+        กำลังขายตอนนี้
       </h2>
       {listings.length === 0 ? (
         <div className="mt-4 rounded-xl border border-dashed border-border bg-card p-10 text-center text-muted-foreground">

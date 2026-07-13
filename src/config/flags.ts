@@ -13,7 +13,7 @@ export const FLAGS = {
   REVIEWS: false,
   /** ราคากลางสินค้าเกษตรรายวัน (กลุ่ม P) — หน้า public สร้างเสร็จ+เทสผ่าน (P2); เปิด true เมื่อกรอกข้อมูลพร้อม */
   PRICES: false,
-  /** โปรไฟล์เกษตรกร (ฟาร์ม/ไร่/ร้าน) (กลุ่ม U) — U1 (ฟอร์มแก้) เสร็จ+เทสผ่าน; เปิด true เมื่อ U2 (หน้า public) เสร็จ */
+  /** โปรไฟล์เกษตรกร (ฟาร์ม/ไร่/ร้าน) (กลุ่ม U) — U1+U2 เสร็จ+เทสผ่าน; เปิด true ตอน deploy หลังรัน migration add_farm_profile บน prod */
   FARM_PROFILE: false,
   /** กระดานจับคู่ซื้อขาย Demand & Supply (กลุ่ม B) */
   MATCHING: false,

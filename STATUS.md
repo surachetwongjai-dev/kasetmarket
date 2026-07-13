@@ -2,11 +2,36 @@
 
 > อัปเดตหลังจบทุก milestone — session ใหม่อ่านไฟล์นี้คู่กับ CLAUDE.md + PLAN.md
 
-- **Milestone ปัจจุบัน:** Phase 2 — **กลุ่ม T (Trust) เสร็จครบ** + **กลุ่ม P (ราคากลาง P1+P2) เสร็จครบ ✅** + **กลุ่ม U — U1 (schema + ฟอร์มแก้โปรไฟล์) เสร็จ ✅** · ก้อนถัดไปตามแผน = **U2 (หน้าโปรไฟล์ public โฉมใหม่)** (หรือ P3 import อัตโนมัติ ทำหลังมีโดเมนจริง)
-- **⚙️ Feature flag:** `FLAGS.REVIEWS = false` (T2 เปิดเมื่อพร้อม) · T3 verify ไม่มี flag · `FLAGS.PRICES = false` (หน้า public P2 สร้างเสร็จ+เทสผ่าน — เปิด `true` เมื่อกรอกราคา ~2 วันแล้ว จะได้มีลูกศรเปลี่ยนแปลง · admin CMS P1 เปิดใช้ได้เลยไม่ผูก flag) · `FLAGS.FARM_PROFILE = false` (U1 ฟอร์มแก้ `/dashboard/profile` เสร็จ+เทสผ่าน — เปิด `true` เมื่อ U2 หน้า public เสร็จ)
+- **Milestone ปัจจุบัน:** Phase 2 — **กลุ่ม T (Trust) เสร็จครบ** + **กลุ่ม P (ราคากลาง P1+P2) เสร็จครบ ✅** + **กลุ่ม U (โปรไฟล์เกษตรกร U1+U2) เสร็จครบ ✅** · ก้อนถัดไปตามแผน = **กลุ่ม B (กระดานจับคู่ซื้อขาย)** หรือ **กลุ่ม C (ชุมชน)** / **กลุ่ม S (ค่าขนส่ง)** — สลับได้อิสระ (หรือ P3 import อัตโนมัติ ทำหลังมีโดเมนจริง)
+- **⚙️ Feature flag:** `FLAGS.REVIEWS = false` (T2 เปิดเมื่อพร้อม) · T3 verify ไม่มี flag · `FLAGS.PRICES = false` (หน้า public P2 สร้างเสร็จ+เทสผ่าน — เปิด `true` เมื่อกรอกราคา ~2 วันแล้ว จะได้มีลูกศรเปลี่ยนแปลง · admin CMS P1 เปิดใช้ได้เลยไม่ผูก flag) · `FLAGS.FARM_PROFILE = false` (**U1+U2 เสร็จ+เทสผ่านครบ** — เปิด `true` ได้เลยตอน deploy **หลังรัน migration `add_farm_profile` บน prod** ไม่งั้นหน้า `/sellers/[id]` จะ error)
 - **⚠️ migration ค้างสำหรับ prod (6 ตัว):** `add_shop_directory` · `add_contact_reveal` · `add_seller_reviews` · `add_verification_request` · `add_price_tables` · `add_farm_profile` — ตอน deploy: `npx dotenv-cli -e .env.production-db -- npx prisma migrate deploy` แล้วรัน `npx dotenv-cli -e .env.production-db -- npx tsx scripts/seed-price-items.ts` (seed 26 รายการราคา)
 - **โดเมนจริง:** taladkaset.com (ผู้ใช้แจ้ง 2026-07-12) — ตั้ง `NEXT_PUBLIC_SITE_URL=https://taladkaset.com` ตอน deploy; แบรนด์ในโค้ดยังเป็น "KasetMarket" ถ้าจะรีแบรนด์ต้องสั่งเป็นงานแยก
 - **อัปเดตล่าสุด:** 2026-07-13
+
+---
+
+## Phase 2 — U2: Public farmer profile ✅ (2026-07-13)
+
+> สเปค PLAN-PHASE2.md §4 กลุ่ม U (U2) — ปรับหน้า `/sellers/[id]` โฉมใหม่ · section ฟาร์มคุมด้วย `FLAGS.FARM_PROFILE`
+
+### สิ่งที่ทำ
+
+- **`features/profile/components/farm-profile-section.tsx`:** บล็อกข้อมูลฟาร์มบนหน้า public — หัวข้อ "เกี่ยวกับ {ชื่อ}" + **chips ประเภทกิจการ** (icon+label จาก `config/farmTypes`) + สินค้าหลัก + ขนาดพื้นที่ (ไร่) + bio (whitespace-pre-line) + **gallery รูปฟาร์ม** (reuse `ListingGallery` — รับ `{id,url}[]`) · helper **`hasFarmContent()`** (type guard) = แสดง section เฉพาะเมื่อมีข้อมูลจริง (bio/products/sizeRai/farmTypes/รูป อย่างน้อย 1)
+- **`/sellers/[id]`:** เพิ่ม `getFarmProfile(id)` ใน `Promise.all` เฉพาะเมื่อ `FLAGS.FARM_PROFILE` → render `FarmProfileSection` คั่นระหว่าง header กับรายการประกาศ · เปลี่ยนหัวข้อ "ประกาศที่กำลังขาย" → **"กำลังขายตอนนี้"** (ตามสเปค) · ส่วน rating (T2) + reviews คงเดิม
+- **ไม่พังของเก่า:** ผู้ใช้ไม่มี FarmProfile หรือ flag ปิด → หน้าเป็นแบบเดิมเป๊ะ (header + ประกาศ + reviews)
+- **report โปรไฟล์ (เลื่อน):** สเปคระบุปุ่มรายงานโปรไฟล์ แต่ `Report` ผูก `listingId` (required) — ต้องแก้ schema moderation ก่อน · **ไม่อยู่ในเกณฑ์ตรวจรับ U2** + ซ้ำซ้อนกับ report ประกาศ + ban user (M7) สำหรับ MVP → เลื่อนไปทำเป็นงาน moderation แยก
+
+### ทดสอบแล้ว (E2E บน `next start` prod build flag=ON + dev DB — เทสเสร็จปิด flag กลับ)
+
+- [x] **seller มี FarmProfile:** หน้า 200 + "เกี่ยวกับ {ชื่อ}" + chips (นาข้าว/โรงงาน-ผู้รับซื้อ) + สินค้าหลัก + **42 ไร่** + bio + รูปฟาร์ม (gallery) + "กำลังขายตอนนี้" + ประกาศ ACTIVE
+- [x] **seller ไม่มี FarmProfile:** หน้า 200 + **ไม่มีบล็อกฟาร์ม** (หน้าเดิม) + ชื่อ/ประกาศครบ ไม่พัง
+- [x] ประเภทกิจการ/สินค้า/ขนาด/bio/รูป render ถูกทุก field (ยืนยันจาก HTML จริง — `<!-- -->` คือ text-separator ของ React ไม่ใช่ bug)
+- [x] `npm run build` ผ่านทั้ง flag on/off — ข้อมูล+สคริปต์ทดสอบล้างหมด (FarmProfile 0 แถว)
+
+### งานที่เหลือ
+
+- [ ] เปิด `FLAGS.FARM_PROFILE=true` ตอน deploy (หลังรัน migration `add_farm_profile` บน prod)
+- [ ] (ทางเลือก) report โปรไฟล์ + section admin — ต้องขยาย schema moderation ก่อน
 
 ---
 
