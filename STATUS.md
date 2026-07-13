@@ -2,11 +2,38 @@
 
 > อัปเดตหลังจบทุก milestone — session ใหม่อ่านไฟล์นี้คู่กับ CLAUDE.md + PLAN.md
 
-- **Milestone ปัจจุบัน:** Phase 2 — **กลุ่ม T (Trust)** + **กลุ่ม P (ราคากลาง P1+P2)** + **กลุ่ม U (โปรไฟล์เกษตรกร U1+U2) เสร็จครบ ✅** + **กลุ่ม B — B1 (MatchPost schema + CRUD + moderation) เสร็จ ✅** · ก้อนถัดไปตามแผน = **B2 (หน้ากระดาน public + SEO + cross-link)** — หรือ **กลุ่ม C (ชุมชน)** / **กลุ่ม S (ค่าขนส่ง)** สลับได้อิสระ
-- **⚙️ Feature flag:** `FLAGS.REVIEWS = false` (T2 เปิดเมื่อพร้อม) · T3 verify ไม่มี flag · `FLAGS.PRICES = false` (หน้า public P2 สร้างเสร็จ+เทสผ่าน — เปิด `true` เมื่อกรอกราคา ~2 วันแล้ว จะได้มีลูกศรเปลี่ยนแปลง · admin CMS P1 เปิดใช้ได้เลยไม่ผูก flag) · `FLAGS.FARM_PROFILE = false` (**U1+U2 เสร็จ+เทสผ่านครบ** — เปิด `true` ได้เลยตอน deploy **หลังรัน migration `add_farm_profile` บน prod** ไม่งั้นหน้า `/sellers/[id]` จะ error) · `FLAGS.MATCHING = false` (**B1 เสร็จ+เทสผ่าน** — เปิด `true` เมื่อ B2 หน้ากระดาน public เสร็จ + migrate prod แล้ว)
+- **Milestone ปัจจุบัน:** Phase 2 — **กลุ่ม T (Trust)** + **กลุ่ม P (ราคากลาง P1+P2)** + **กลุ่ม U (โปรไฟล์เกษตรกร U1+U2)** + **กลุ่ม B (กระดานจับคู่ซื้อขาย B1+B2) เสร็จครบ ✅** · ก้อนถัดไปตามแผน = **กลุ่ม C (ชุมชนพูดคุย)** หรือ **กลุ่ม S (ค่าขนส่ง)** สลับได้อิสระ (เหลือ 2 กลุ่มสุดท้ายของ Phase 2)
+- **⚙️ Feature flag:** `FLAGS.REVIEWS = false` (T2 เปิดเมื่อพร้อม) · T3 verify ไม่มี flag · `FLAGS.PRICES = false` (หน้า public P2 สร้างเสร็จ+เทสผ่าน — เปิด `true` เมื่อกรอกราคา ~2 วันแล้ว จะได้มีลูกศรเปลี่ยนแปลง · admin CMS P1 เปิดใช้ได้เลยไม่ผูก flag) · `FLAGS.FARM_PROFILE = false` (**U1+U2 เสร็จ+เทสผ่านครบ** — เปิด `true` ได้เลยตอน deploy **หลังรัน migration `add_farm_profile` บน prod** ไม่งั้นหน้า `/sellers/[id]` จะ error) · `FLAGS.MATCHING = false` (**B1+B2 เสร็จ+เทสผ่านครบ** — เปิด `true` ได้ตอน deploy **หลังรัน migration `add_match_post` บน prod** ไม่งั้นหน้า `/จับคู่ซื้อขาย`+หน้าแรก+sitemap จะ error)
 - **⚠️ migration ค้างสำหรับ prod (7 ตัว):** `add_shop_directory` · `add_contact_reveal` · `add_seller_reviews` · `add_verification_request` · `add_price_tables` · `add_farm_profile` · `add_match_post` — ตอน deploy: `npx dotenv-cli -e .env.production-db -- npx prisma migrate deploy` แล้วรัน `npx dotenv-cli -e .env.production-db -- npx tsx scripts/seed-price-items.ts` (seed 26 รายการราคา)
 - **โดเมนจริง:** taladkaset.com (ผู้ใช้แจ้ง 2026-07-12) — ตั้ง `NEXT_PUBLIC_SITE_URL=https://taladkaset.com` ตอน deploy; แบรนด์ในโค้ดยังเป็น "KasetMarket" ถ้าจะรีแบรนด์ต้องสั่งเป็นงานแยก
 - **อัปเดตล่าสุด:** 2026-07-13
+
+---
+
+## Phase 2 — B2: Matching board pages ✅ (2026-07-13)
+
+> สเปค PLAN-PHASE2.md §5 กลุ่ม B (B2) — หน้ากระดาน public + SEO + cross-link · หลัง `FLAGS.MATCHING` (ปิดไว้ เปิดเมื่อ migrate prod)
+
+### สิ่งที่ทำ
+
+- **URL ไทย** `/จับคู่ซื้อขาย` → route จริง `/matching` (เพิ่มใน `next.config.ts` rewrite+redirect ตามแพทเทิร์น directory/prices — encoded+literal) + `/[slug]` · path helper `features/matching/paths.ts` (`MATCHING_BASE`, `matchPostPath`, `matchBoardPath` ประกอบ filter, `matchAbsoluteUrl` encode ไทยสำหรับ sitemap)
+- **Public queries** (`features/matching/queries.ts`): `getPublicMatchPosts` (filter type/category/province + sort nearest(targetDate asc nulls last)/newest + pagination), `getMatchTypeCounts` (ป้ายบนแท็บ), `getActiveMatchPostBySlug`, `getRelatedMatchPosts` (ฝั่งตรงข้าม SUPPLY↔DEMAND หมวด+จังหวัดเดียวกันก่อน), `getActiveMatchCount` (cross-link บนหน้าประกาศ), `getListingsForMatch` (cross-link ประกาศปกติ), `getMatchPostsForSitemap`, `getLatestMatchPosts` (หน้าแรก)
+- **หน้ากระดาน `/จับคู่ซื้อขาย`** (dynamic): 2 แท็บ 🌾 ผลผลิตเสนอขาย / 🏭 ประกาศรับซื้อ (พร้อมจำนวน) + filter หมวด/จังหวัด/เรียง (form GET ไม่ต้องมี JS, action ชี้ URL ไทย) + การ์ด (type badge สี/ชื่อ/ปริมาณ/จังหวัด/targetDate/ผู้โพส+✓) + pagination
+- **หน้ารายตัว `/จับคู่ซื้อขาย/[slug]`** (ISR 300s): type badge, ปริมาณ/พื้นที่/targetDate/ราคา, รายละเอียด, การ์ดผู้โพส (ลิงก์โปรไฟล์+✓), **SafetyNotice + ContactButtons (คำเตือนก่อนเบอร์, ไม่ log — ไม่มี Listing ผูก ตามแพทเทิร์นหน้าร้าน)**, ViewTracker (`/api/matching/[id]/view`), **cross-link 2 ทาง** (โพสฝั่งตรงข้ามหมวดนี้ + ประกาศขายหมวดเดียวกัน)
+- **จุดดึงเข้า:** nav header + section หน้าแรก "🤝 กระดานจับคู่ซื้อขาย" (โพสล่าสุด 6) + หน้าประกาศมีลิงก์ "🏭 มีคนประกาศรับซื้อ{หมวด} N ราย →" · **sitemap** เพิ่มหน้ารวม+รายตัว ACTIVE (ทั้งหมดหลัง `FLAGS.MATCHING`)
+
+### ทดสอบแล้ว (HTTP E2E 20/20 บน `next start` prod build flag=ON + dev DB — เทสเสร็จปิด flag)
+
+- [x] **filter ทุกคอมโบถูก:** แท็บ SUPPLY/DEMAND แยกถูก · category/province/ทั้งคู่ กรองตรง · **sort=nearest เรียง targetDate ใกล้สุดก่อน**
+- [x] **URL ไทยทำงาน:** `/จับคู่ซื้อขาย` เสิร์ฟ content · `/matching` → **308 redirect** ไป URL ไทย
+- [x] **reveal เบอร์มีคำเตือนก่อน:** มีปุ่ม "แสดงเบอร์โทร" + SafetyNotice · **เบอร์ไม่อยู่ใน HTML ก่อนกด** (กัน scraping)
+- [x] **cross-link สองฝั่งเจอกันถูกหมวด+จังหวัด:** รายตัวโชว์ DEMAND ฝั่งตรงข้าม + ประกาศขายหมวดเดียวกัน · หน้าประกาศโชว์ "มีคนประกาศรับซื้อ...2 ราย"
+- [x] `npm run build` ผ่านทั้ง flag on/off — ข้อมูล+สคริปต์ทดสอบล้างหมด (MatchPost 0 แถว)
+
+### งานที่เหลือ
+
+- [ ] เปิด `FLAGS.MATCHING=true` ตอน deploy (หลังรัน migration `add_match_post` บน prod) → nav + หน้ากระดาน + section หน้าแรก + sitemap โผล่พร้อมกัน
+- [ ] (Phase 2.5) B3: แจ้งเตือนจับคู่ผ่าน LINE (subscribe หมวด+จังหวัด → push) — มี quota/ต้นทุน ตัดสินใจตอนมีผู้ใช้จริง
 
 ---
 

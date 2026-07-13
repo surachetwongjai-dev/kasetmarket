@@ -18,6 +18,7 @@ import { ReportButton } from "@/features/moderation/components/report-button";
 import { getShopsForListing } from "@/features/directory/queries";
 import { ShopCard } from "@/features/directory/components/shop-card";
 import { RatingStars, getSellerRatingSummary } from "@/features/trust";
+import { getActiveMatchCount, matchBoardPath } from "@/features/matching";
 import { FLAGS } from "@/config/flags";
 import { getCategoryLabel } from "@/config/categories";
 import { getUnitLabel } from "@/config/units";
@@ -55,15 +56,20 @@ export default async function ListingDetailPage({ params }: Props) {
   const listing = await getActiveListingBySlug(decodeURIComponent(slug));
   if (!listing) notFound();
 
-  const [related, nearbyShops, sellerRating] = await Promise.all([
-    getRelatedListings(listing),
-    // cross-link directory (D3): ร้านหมวดเกี่ยวข้อง + จังหวัดเดียวกัน สูงสุด 4
-    getShopsForListing(listing.category, listing.province),
-    // ดาวรีวิวผู้ขาย (T2) — เฉพาะเมื่อเปิด flag
-    FLAGS.REVIEWS
-      ? getSellerRatingSummary(listing.seller.id)
-      : Promise.resolve(null),
-  ]);
+  const [related, nearbyShops, sellerRating, matchDemandCount] =
+    await Promise.all([
+      getRelatedListings(listing),
+      // cross-link directory (D3): ร้านหมวดเกี่ยวข้อง + จังหวัดเดียวกัน สูงสุด 4
+      getShopsForListing(listing.category, listing.province),
+      // ดาวรีวิวผู้ขาย (T2) — เฉพาะเมื่อเปิด flag
+      FLAGS.REVIEWS
+        ? getSellerRatingSummary(listing.seller.id)
+        : Promise.resolve(null),
+      // cross-link กระดานจับคู่ (B2): มีคนประกาศรับซื้อหมวดนี้กี่ราย
+      FLAGS.MATCHING
+        ? getActiveMatchCount("DEMAND", listing.category)
+        : Promise.resolve(0),
+    ]);
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -135,6 +141,22 @@ export default async function ListingDetailPage({ params }: Props) {
               {listing.description}
             </p>
           </section>
+
+          {matchDemandCount > 0 && (
+            <Link
+              href={matchBoardPath({
+                type: "DEMAND",
+                category: listing.category,
+              })}
+              className="mt-5 flex items-center justify-between gap-2 rounded-xl border border-primary/30 bg-primary/5 p-3 text-sm font-medium text-primary-dk transition-colors hover:bg-primary/10"
+            >
+              <span>
+                🏭 มีคนประกาศรับซื้อ{getCategoryLabel(listing.category)}{" "}
+                {matchDemandCount.toLocaleString("th-TH")} ราย
+              </span>
+              <span aria-hidden>→</span>
+            </Link>
+          )}
 
           <div className="mt-5">
             <ReportButton listingId={listing.id} />

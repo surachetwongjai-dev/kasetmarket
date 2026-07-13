@@ -4,6 +4,7 @@ import { FLAGS } from "@/config/flags";
 
 const NAV_LINKS = [
   { href: "/listings", label: "ประกาศขาย" },
+  ...(FLAGS.MATCHING ? [{ href: "/จับคู่ซื้อขาย", label: "จับคู่ซื้อขาย" }] : []),
   { href: "/ร้านค้า", label: "ร้านค้าเกษตร" },
   ...(FLAGS.PRICES ? [{ href: "/ราคาสินค้าเกษตร", label: "ราคากลาง" }] : []),
   { href: "/articles", label: "บทความเกษตร" },

@@ -18,6 +18,11 @@ import {
   priceChange,
   PriceChange,
 } from "@/features/prices";
+import {
+  getLatestMatchPosts,
+  MatchPostCard,
+  MATCHING_BASE,
+} from "@/features/matching";
 import { CATEGORIES } from "@/config/categories";
 import { FLAGS } from "@/config/flags";
 import { SITE_NAME, SITE_URL, YOUTUBE_CHANNEL_URL } from "@/config/site";
@@ -64,11 +69,12 @@ const siteJsonLd = {
 };
 
 export default async function HomePage() {
-  const [featured, latest, articles, homePrices] = await Promise.all([
+  const [featured, latest, articles, homePrices, matchPosts] = await Promise.all([
     getFeaturedListings(4),
     getLatestListings(12),
     getPublishedArticles({ page: 1 }),
     FLAGS.PRICES ? getHomeFeaturedPrices() : Promise.resolve([]),
+    FLAGS.MATCHING ? getLatestMatchPosts(6) : Promise.resolve([]),
   ]);
 
   return (
@@ -173,6 +179,21 @@ export default async function HomePage() {
             })}
           </div>
         </section>
+      )}
+
+      {/* กระดานจับคู่ซื้อขาย (เมื่อเปิด FLAGS.MATCHING) */}
+      {matchPosts.length > 0 && (
+        <HomeSection
+          title="🤝 กระดานจับคู่ซื้อขาย"
+          href={MATCHING_BASE}
+          linkLabel="ดูกระดานทั้งหมด"
+        >
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {matchPosts.map((post) => (
+              <MatchPostCard key={post.id} post={post} />
+            ))}
+          </div>
+        </HomeSection>
       )}
 
       {/* ประกาศเด่น */}

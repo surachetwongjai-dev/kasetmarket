@@ -18,6 +18,12 @@ import {
   pricePath,
   priceAbsoluteUrl,
 } from "@/features/prices";
+import {
+  getMatchPostsForSitemap,
+  MATCHING_BASE,
+  matchPostPath,
+  matchAbsoluteUrl,
+} from "@/features/matching";
 import { getShopCategory } from "@/config/shopCategories";
 import { FLAGS } from "@/config/flags";
 import { SITE_URL } from "@/config/site";
@@ -25,11 +31,12 @@ import { SITE_URL } from "@/config/site";
 export const revalidate = 3600;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [listings, articles, shops, priceItems] = await Promise.all([
+  const [listings, articles, shops, priceItems, matchPosts] = await Promise.all([
     getAllActiveListingSlugs(),
     getAllPublishedArticleSlugs(),
     getAllApprovedShops(),
     FLAGS.PRICES ? getPriceItemsForSitemap() : Promise.resolve([]),
+    FLAGS.MATCHING ? getMatchPostsForSitemap() : Promise.resolve([]),
   ]);
 
   const staticPages: MetadataRoute.Sitemap = [
@@ -111,11 +118,29 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       ]
     : [];
 
+  // กระดานจับคู่: หน้ารวม + รายตัว ACTIVE (หลัง FLAGS.MATCHING)
+  const matchingPages: MetadataRoute.Sitemap = matchPosts.length
+    ? [
+        {
+          url: matchAbsoluteUrl(MATCHING_BASE),
+          changeFrequency: "daily",
+          priority: 0.8,
+        },
+        ...matchPosts.map((p) => ({
+          url: matchAbsoluteUrl(matchPostPath(p.slug)),
+          lastModified: p.updatedAt,
+          changeFrequency: "weekly" as const,
+          priority: 0.6,
+        })),
+      ]
+    : [];
+
   return [
     ...staticPages,
     ...listingPages,
     ...articlePages,
     ...directoryPages,
     ...pricePages,
+    ...matchingPages,
   ];
 }
