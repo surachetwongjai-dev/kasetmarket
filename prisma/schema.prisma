@@ -349,6 +349,7 @@ model Thread {
   repliesCount Int           @default(0) // denormalize
   lastReplyAt  DateTime      @default(now()) // ใช้เรียงหน้า list (กระทู้ที่ขยับล่าสุดขึ้นก่อน)
   replies      ThreadReply[]
+  reports      ForumReport[]
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
 
@@ -366,16 +367,31 @@ model ThreadImage {
   @@index([threadId])
 }
 
+// C2: รายงานกระทู้/คำตอบ (threadId หรือ replyId อย่างใดอย่างหนึ่ง — บังคับใน action)
+model ForumReport {
+  id        String       @id @default(cuid())
+  thread    Thread?      @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  threadId  String?
+  reply     ThreadReply? @relation(fields: [replyId], references: [id], onDelete: Cascade)
+  replyId   String?
+  reason    String
+  resolved  Boolean      @default(false)
+  createdAt DateTime     @default(now())
+
+  @@index([resolved, createdAt])
+}
+
 model ThreadReply {
   id        String   @id @default(cuid())
   thread    Thread   @relation(fields: [threadId], references: [id], onDelete: Cascade)
   threadId  String
   author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
   authorId  String
-  body      String   @db.Text
-  hidden    Boolean  @default(false)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  body      String        @db.Text
+  hidden    Boolean       @default(false)
+  reports   ForumReport[]
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
 
   @@index([threadId, createdAt])
 }

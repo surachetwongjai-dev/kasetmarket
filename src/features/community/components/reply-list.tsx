@@ -1,6 +1,7 @@
-// รายการคำตอบในกระทู้ (C1) — เรียงเก่า→ใหม่ · server component
+// รายการคำตอบในกระทู้ (C1) — เรียงเก่า→ใหม่ · server component (ควบคุมต่อคำตอบเป็น client)
 
 import { formatTimeAgo } from "@/lib/format";
+import { ReplyControls } from "./reply-controls";
 
 export type ReplyView = {
   id: string;
@@ -39,6 +40,9 @@ export function ReplyList({ replies }: { replies: ReplyView[] }) {
           <p className="mt-2 whitespace-pre-wrap text-base leading-relaxed">
             {reply.body}
           </p>
+          <ReplyControls
+            reply={{ id: reply.id, authorId: reply.author.id, body: reply.body }}
+          />
         </li>
       ))}
     </ul>

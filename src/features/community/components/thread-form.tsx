@@ -15,18 +15,29 @@ import {
 
 const initialState: ThreadFormState = {};
 
+export type ThreadFormDefaults = {
+  title: string;
+  body: string;
+  category: string;
+  images: UploadedImage[];
+};
+
 export function ThreadForm({
   action,
   defaultCategory,
+  defaults,
+  submitLabel = "ตั้งกระทู้",
 }: {
   action: (
     prev: ThreadFormState,
     formData: FormData,
   ) => Promise<ThreadFormState>;
   defaultCategory?: string;
+  defaults?: Partial<ThreadFormDefaults>;
+  submitLabel?: string;
 }) {
   const [state, formAction, pending] = useActionState(action, initialState);
-  const [images, setImages] = useState<UploadedImage[]>([]);
+  const [images, setImages] = useState<UploadedImage[]>(defaults?.images ?? []);
 
   return (
     <form action={formAction} className="flex flex-col gap-5">
@@ -37,6 +48,7 @@ export function ThreadForm({
           name="title"
           required
           maxLength={MAX_THREAD_TITLE}
+          defaultValue={defaults?.title}
           placeholder="เช่น ข้าวใบเหลืองช่วงแตกกอ แก้ยังไงดี"
           className="h-11"
         />
@@ -49,7 +61,7 @@ export function ThreadForm({
           id="category"
           name="category"
           required
-          defaultValue={defaultCategory ?? ""}
+          defaultValue={defaults?.category ?? defaultCategory ?? ""}
           className="h-11 w-full rounded-lg border border-input bg-transparent px-2.5 text-base outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
         >
           <option value="" disabled>
@@ -72,6 +84,7 @@ export function ThreadForm({
           required
           rows={7}
           maxLength={MAX_THREAD_BODY}
+          defaultValue={defaults?.body}
           placeholder="เล่าปัญหา/คำถามให้ละเอียด ยิ่งบอกข้อมูลครบ เพื่อนเกษตรกรยิ่งช่วยได้ตรงจุด"
           className="w-full rounded-lg border border-input bg-transparent px-2.5 py-2 text-base leading-relaxed outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
         />
@@ -80,7 +93,7 @@ export function ThreadForm({
 
       <section className="flex flex-col gap-1.5">
         <Label>รูปประกอบ (ไม่บังคับ สูงสุด 3 รูป)</Label>
-        <ImageUploader max={3} onChange={setImages} />
+        <ImageUploader max={3} initial={defaults?.images} onChange={setImages} />
         <input type="hidden" name="images" value={JSON.stringify(images)} />
         <FieldError messages={state.fieldErrors?.images} />
       </section>
@@ -96,7 +109,7 @@ export function ThreadForm({
         disabled={pending}
         className="h-12 w-full rounded-lg bg-primary text-base font-semibold text-primary-foreground transition-colors hover:bg-primary/90 active:translate-y-px disabled:pointer-events-none disabled:opacity-60"
       >
-        {pending ? "กำลังโพส..." : "ตั้งกระทู้"}
+        {pending ? "กำลังบันทึก..." : submitLabel}
       </button>
     </form>
   );

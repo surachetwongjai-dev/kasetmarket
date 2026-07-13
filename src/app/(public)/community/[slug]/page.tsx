@@ -10,6 +10,8 @@ import {
   getThreadReplies,
   ReplyList,
   ReplyGate,
+  ThreadControls,
+  ForumReportButton,
   COMMUNITY_BASE,
   communityBoardPath,
 } from "@/features/community";
@@ -96,6 +98,20 @@ export default async function ThreadPage({ params }: Props) {
             <ListingGallery images={thread.images} title={thread.title} />
           </div>
         )}
+
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+          <ThreadControls
+            thread={{
+              id: thread.id,
+              slug: thread.slug,
+              authorId: thread.author.id,
+              pinned: thread.pinned,
+              locked: thread.locked,
+              hidden: thread.hidden,
+            }}
+          />
+          <ForumReportButton target="thread" targetId={thread.id} label="รายงานกระทู้" />
+        </div>
       </article>
 
       <section className="mt-8">

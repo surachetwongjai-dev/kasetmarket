@@ -4,7 +4,7 @@ import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { auth } from "@/features/auth";
 import { FLAGS } from "@/config/flags";
-import { ThreadForm, createThreadAction } from "@/features/community";
+import { ThreadForm, CommunityRules, createThreadAction } from "@/features/community";
 
 export const metadata: Metadata = {
   title: "ตั้งกระทู้ใหม่",
@@ -30,6 +30,9 @@ export default async function NewThreadPage({
       <p className="mt-1 text-sm text-muted-foreground">
         ถามปัญหา แชร์ความรู้ หรือชวนคุยเรื่องเกษตร — สุภาพ ตรงประเด็น ช่วยกันตอบ
       </p>
+      <div className="mt-6">
+        <CommunityRules />
+      </div>
       <div className="mt-6">
         <ThreadForm action={createThreadAction} defaultCategory={category} />
       </div>

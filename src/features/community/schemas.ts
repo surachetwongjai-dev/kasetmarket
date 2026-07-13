@@ -60,3 +60,30 @@ export function threadFormDataToObject(formData: FormData) {
     images,
   };
 }
+
+// C2: รายงาน + แก้ไข
+export const FORUM_REPORT_REASONS = [
+  "เนื้อหาไม่เหมาะสม",
+  "สแปม/โฆษณา",
+  "ข้อมูลเท็จ/หลอกลวง",
+  "ผิดกฎหมาย",
+  "อื่นๆ",
+] as const;
+
+export const forumReportSchema = z.object({
+  target: z.enum(["thread", "reply"]),
+  targetId: z.string().min(1),
+  reason: z.enum(FORUM_REPORT_REASONS, { message: "กรุณาเลือกเหตุผล" }),
+});
+
+export const replyEditSchema = z.object({
+  replyId: z.string().min(1),
+  body: z
+    .string()
+    .trim()
+    .min(1, "กรุณาพิมพ์คำตอบ")
+    .max(MAX_REPLY_BODY, `คำตอบยาวเกิน ${MAX_REPLY_BODY} ตัวอักษร`),
+});
+
+/** แก้ไขได้ภายในกี่ชั่วโมงหลังโพส (กันย้อนแก้ประวัติ) */
+export const EDIT_WINDOW_HOURS = 24;

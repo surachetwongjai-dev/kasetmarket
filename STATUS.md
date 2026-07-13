@@ -2,11 +2,37 @@
 
 > อัปเดตหลังจบทุก milestone — session ใหม่อ่านไฟล์นี้คู่กับ CLAUDE.md + PLAN.md
 
-- **Milestone ปัจจุบัน:** Phase 2 — **กลุ่ม T** + **P (P1+P2)** + **U (U1+U2)** + **B (B1+B2) เสร็จครบ ✅** + **กลุ่ม C — C1 (บอร์ด+กระทู้+ตอบ) เสร็จ ✅** · ก้อนถัดไป = **C2 (moderation+รายงาน)** → **C3 (SEO+จุดดึงเข้า)** · เหลือ **กลุ่ม S (ค่าขนส่ง)** เป็นกลุ่มสุดท้าย
-- **⚙️ Feature flag:** `FLAGS.REVIEWS = false` (T2 เปิดเมื่อพร้อม) · T3 verify ไม่มี flag · `FLAGS.PRICES = false` (P2 เสร็จ+เทส — เปิดเมื่อกรอกราคา ~2 วัน · admin P1 ใช้ได้เลย) · `FLAGS.FARM_PROFILE = false` (**U1+U2 เสร็จ** — เปิดได้หลัง migrate `add_farm_profile`) · `FLAGS.MATCHING = false` (**B1+B2 เสร็จ** — เปิดได้หลัง migrate `add_match_post`) · `FLAGS.COMMUNITY = false` (**C1 เสร็จ+เทสผ่าน** — เปิดเมื่อ C2/C3 เสร็จ + seed กระทู้ 10-15 + migrate prod)
-- **⚠️ migration ค้างสำหรับ prod (8 ตัว):** `add_shop_directory` · `add_contact_reveal` · `add_seller_reviews` · `add_verification_request` · `add_price_tables` · `add_farm_profile` · `add_match_post` · `add_community` — ตอน deploy: `npx dotenv-cli -e .env.production-db -- npx prisma migrate deploy` แล้วรัน `npx dotenv-cli -e .env.production-db -- npx tsx scripts/seed-price-items.ts` (seed 26 รายการราคา)
+- **Milestone ปัจจุบัน:** Phase 2 — **กลุ่ม T** + **P (P1+P2)** + **U (U1+U2)** + **B (B1+B2) เสร็จครบ ✅** + **กลุ่ม C — C1+C2 (บอร์ด+กระทู้+ตอบ+moderation) เสร็จ ✅** · ก้อนถัดไป = **C3 (SEO+จุดดึงเข้า)** · เหลือ **กลุ่ม S (ค่าขนส่ง)** เป็นกลุ่มสุดท้าย
+- **⚙️ Feature flag:** `FLAGS.REVIEWS = false` (T2 เปิดเมื่อพร้อม) · T3 verify ไม่มี flag · `FLAGS.PRICES = false` (P2 เสร็จ+เทส — เปิดเมื่อกรอกราคา ~2 วัน · admin P1 ใช้ได้เลย) · `FLAGS.FARM_PROFILE = false` (**U1+U2 เสร็จ** — เปิดได้หลัง migrate `add_farm_profile`) · `FLAGS.MATCHING = false` (**B1+B2 เสร็จ** — เปิดได้หลัง migrate `add_match_post`) · `FLAGS.COMMUNITY = false` (**C1+C2 เสร็จ+เทสผ่าน** — เปิดเมื่อ C3 เสร็จ + seed กระทู้ 10-15 + migrate prod)
+- **⚠️ migration ค้างสำหรับ prod (9 ตัว):** `add_shop_directory` · `add_contact_reveal` · `add_seller_reviews` · `add_verification_request` · `add_price_tables` · `add_farm_profile` · `add_match_post` · `add_community` · `add_forum_report` — ตอน deploy: `npx dotenv-cli -e .env.production-db -- npx prisma migrate deploy` แล้วรัน `npx dotenv-cli -e .env.production-db -- npx tsx scripts/seed-price-items.ts` (seed 26 รายการราคา)
 - **โดเมนจริง:** taladkaset.com (ผู้ใช้แจ้ง 2026-07-12) — ตั้ง `NEXT_PUBLIC_SITE_URL=https://taladkaset.com` ตอน deploy; แบรนด์ในโค้ดยังเป็น "KasetMarket" ถ้าจะรีแบรนด์ต้องสั่งเป็นงานแยก
 - **อัปเดตล่าสุด:** 2026-07-13
+
+---
+
+## Phase 2 — C2: Community moderation ✅ (2026-07-13)
+
+> สเปค PLAN-PHASE2.md §6 กลุ่ม C (C2) — รายงาน + moderation + แก้/ลบเอง · หลัง `FLAGS.COMMUNITY`
+
+### สิ่งที่ทำ
+
+- **Schema:** `ForumReport` (`threadId?`/`replyId?` อย่างใดอย่างหนึ่ง — บังคับใน action) + back-relation `Thread.reports`/`ThreadReply.reports` · migration `20260713030000_add_forum_report` (**apply dev DB แล้ว, prod ยังไม่**)
+- **actions (ต่อจาก C1):** `reportForumAction` (ไม่ต้องล็อกอิน, กันซ้ำ = มีรายงานค้างของ target เดิม→เงียบ) · **เจ้าของ:** `updateThreadAction`/`deleteThreadAction` + `updateReplyAction`/`deleteReplyAction` (แก้ได้ภายใน 24 ชม. `EDIT_WINDOW_HOURS`, ลบได้ตลอด) · **แอดมิน:** toggleHide thread/reply (ปรับ `repliesCount` ตามการมองเห็น), togglePin, toggleLock, resolveForumReport
+- **queries:** `getForumReportsForAdmin`, `getOpenForumReportCount`, `getMyThreadForEdit`
+- **components:** `forum-report-button` (dialog), `thread-controls` (client useSession — เจ้าของ:แก้/ลบ · แอดมิน:ซ่อน/ปักหมุด/ล็อก/ลบ), `reply-controls` (รายงาน+เจ้าของแก้ inline/ลบ+แอดมินซ่อน), `community-rules` (กติกา 5 ข้อ)
+- **หน้า:** `/admin/community` (คิวรายงาน + ซ่อน/เลิกซ่อน + ปิดงาน) + แท็บ "ชุมชน" ใน admin + การ์ด "รายงานชุมชนค้าง" ในภาพรวม · `/ชุมชน/[slug]/edit` (แก้กระทู้เจ้าของ) · ปุ่มรายงาน+ควบคุมบนหน้ากระทู้ · กติกาบนหน้าตั้งกระทู้ + `<details>` บน hub (ทั้งหมดหลัง flag)
+
+### ทดสอบแล้ว (HTTP 8/8 + integration 4/4 บน `next start` flag=ON + dev DB — เทสเสร็จปิด flag)
+
+- [x] **flow รายงาน→ซ่อน→หายจาก public (action จริงผ่าน `/admin/community`):** คิวแสดงรายงาน → แอดมินกดซ่อนกระทู้ → hidden ใน DB → **หายจาก hub + getThreadBySlug=null + เข้า URL ตรง = not-found (ไม่เจอเนื้อหา)**
+- [x] ปิดงานรายงาน (resolve) → open count 0 · ปุ่ม "รายงานกระทู้" แสดงบนหน้ากระทู้
+- [x] **report dedupe** (มี pending → ไม่สร้างซ้ำ) · **ซ่อนคำตอบ → repliesCount ลด + getThreadReplies ไม่รวม**
+- [x] ล็อกกระทู้→ฟอร์มตอบหาย: `ReplyGate` เช็ค `locked` (C1) + `createReplyAction` มี guard `locked`
+- [x] `npm run build` ผ่านทั้ง flag on/off — ข้อมูล+สคริปต์ทดสอบล้างหมด
+
+### งานที่เหลือ
+
+- [ ] **C3 ถัดไป:** JSON-LD `DiscussionForumPosting` + sitemap (ไม่ hidden) + section หน้าแรก "จากชุมชน" + ลิงก์จากบทความ (หมวด map) → แล้วเปิด flag (หลัง seed กระทู้จริง 10-15)
 
 ---
 

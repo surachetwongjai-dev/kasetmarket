@@ -94,3 +94,38 @@ export async function getLatestThreads(limit = 3) {
     include: { author: authorSelect },
   });
 }
+
+// ---------- C2: author edit + admin ----------
+
+/** กระทู้ของ user สำหรับหน้าแก้ไข (ตรวจ ownership) */
+export async function getMyThreadForEdit(id: string, userId: string) {
+  const thread = await prisma.thread.findUnique({
+    where: { id },
+    include: { images: { orderBy: { order: "asc" } } },
+  });
+  if (!thread || thread.authorId !== userId) return null;
+  return thread;
+}
+
+/** คิวรายงานชุมชนสำหรับแอดมิน (ค้างก่อน) */
+export async function getForumReportsForAdmin() {
+  return prisma.forumReport.findMany({
+    orderBy: [{ resolved: "asc" }, { createdAt: "desc" }],
+    take: 100,
+    include: {
+      thread: { select: { id: true, slug: true, title: true, hidden: true } },
+      reply: {
+        select: {
+          id: true,
+          body: true,
+          hidden: true,
+          thread: { select: { slug: true, title: true } },
+        },
+      },
+    },
+  });
+}
+
+export async function getOpenForumReportCount() {
+  return prisma.forumReport.count({ where: { resolved: false } });
+}

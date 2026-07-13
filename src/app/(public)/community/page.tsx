@@ -11,6 +11,7 @@ import {
   getThreadCategoryCounts,
   ThreadCard,
   CommunityPagination,
+  CommunityRules,
   COMMUNITY_BASE,
   communityBoardPath,
 } from "@/features/community";
@@ -107,6 +108,15 @@ export default async function CommunityHubPage({
           params={{ category }}
         />
       </div>
+
+      <details className="mt-8">
+        <summary className="cursor-pointer text-sm font-medium text-muted-foreground hover:text-foreground">
+          📋 กติกาชุมชน
+        </summary>
+        <div className="mt-2">
+          <CommunityRules />
+        </div>
+      </details>
     </main>
   );
 }
