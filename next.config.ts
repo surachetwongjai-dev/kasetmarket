@@ -51,6 +51,7 @@ const nextConfig: NextConfig = {
       ["ลงทะเบียนร้านค้า", "/register-shop"],
       ["ราคาสินค้าเกษตร", "/prices"],
       ["จับคู่ซื้อขาย", "/matching"],
+      ["ชุมชน", "/community"],
     ];
     // กฎเฉพาะต้องมาก่อนกฎ :path* (first match wins): /ลงทะเบียนร้านค้า/สำเร็จ → หน้า success
     const successSource = `/${encodeURIComponent("ลงทะเบียนร้านค้า")}/${encodeURIComponent("สำเร็จ")}`;
@@ -91,6 +92,12 @@ const nextConfig: NextConfig = {
       {
         source: "/matching/:path*",
         destination: "/จับคู่ซื้อขาย/:path*",
+        permanent: true,
+      },
+      { source: "/community", destination: "/ชุมชน", permanent: true },
+      {
+        source: "/community/:path*",
+        destination: "/ชุมชน/:path*",
         permanent: true,
       },
     ];

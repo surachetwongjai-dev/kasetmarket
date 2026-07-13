@@ -17,7 +17,7 @@ export const FLAGS = {
   FARM_PROFILE: false,
   /** กระดานจับคู่ซื้อขาย Demand & Supply (กลุ่ม B) — B1+B2 เสร็จ+เทสผ่านครบ; เปิด true ได้เลยตอน deploy หลังรัน migration add_match_post บน prod */
   MATCHING: false,
-  /** ชุมชนพูดคุยปัญหาเกษตร (กลุ่ม C) */
+  /** ชุมชนพูดคุยปัญหาเกษตร (กลุ่ม C) — C1 (บอร์ด+กระทู้+ตอบ) เสร็จ+เทสผ่าน; เปิด true เมื่อ C2/C3 เสร็จ + seed กระทู้ 10-15 + migrate prod */
   COMMUNITY: false,
   /** เช็คค่าขนส่งทุกค่าย (กลุ่ม S) */
   SHIPPING_RATES: false,

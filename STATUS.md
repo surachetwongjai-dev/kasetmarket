@@ -2,11 +2,36 @@
 
 > อัปเดตหลังจบทุก milestone — session ใหม่อ่านไฟล์นี้คู่กับ CLAUDE.md + PLAN.md
 
-- **Milestone ปัจจุบัน:** Phase 2 — **กลุ่ม T (Trust)** + **กลุ่ม P (ราคากลาง P1+P2)** + **กลุ่ม U (โปรไฟล์เกษตรกร U1+U2)** + **กลุ่ม B (กระดานจับคู่ซื้อขาย B1+B2) เสร็จครบ ✅** · ก้อนถัดไปตามแผน = **กลุ่ม C (ชุมชนพูดคุย)** หรือ **กลุ่ม S (ค่าขนส่ง)** สลับได้อิสระ (เหลือ 2 กลุ่มสุดท้ายของ Phase 2)
-- **⚙️ Feature flag:** `FLAGS.REVIEWS = false` (T2 เปิดเมื่อพร้อม) · T3 verify ไม่มี flag · `FLAGS.PRICES = false` (หน้า public P2 สร้างเสร็จ+เทสผ่าน — เปิด `true` เมื่อกรอกราคา ~2 วันแล้ว จะได้มีลูกศรเปลี่ยนแปลง · admin CMS P1 เปิดใช้ได้เลยไม่ผูก flag) · `FLAGS.FARM_PROFILE = false` (**U1+U2 เสร็จ+เทสผ่านครบ** — เปิด `true` ได้เลยตอน deploy **หลังรัน migration `add_farm_profile` บน prod** ไม่งั้นหน้า `/sellers/[id]` จะ error) · `FLAGS.MATCHING = false` (**B1+B2 เสร็จ+เทสผ่านครบ** — เปิด `true` ได้ตอน deploy **หลังรัน migration `add_match_post` บน prod** ไม่งั้นหน้า `/จับคู่ซื้อขาย`+หน้าแรก+sitemap จะ error)
-- **⚠️ migration ค้างสำหรับ prod (7 ตัว):** `add_shop_directory` · `add_contact_reveal` · `add_seller_reviews` · `add_verification_request` · `add_price_tables` · `add_farm_profile` · `add_match_post` — ตอน deploy: `npx dotenv-cli -e .env.production-db -- npx prisma migrate deploy` แล้วรัน `npx dotenv-cli -e .env.production-db -- npx tsx scripts/seed-price-items.ts` (seed 26 รายการราคา)
+- **Milestone ปัจจุบัน:** Phase 2 — **กลุ่ม T** + **P (P1+P2)** + **U (U1+U2)** + **B (B1+B2) เสร็จครบ ✅** + **กลุ่ม C — C1 (บอร์ด+กระทู้+ตอบ) เสร็จ ✅** · ก้อนถัดไป = **C2 (moderation+รายงาน)** → **C3 (SEO+จุดดึงเข้า)** · เหลือ **กลุ่ม S (ค่าขนส่ง)** เป็นกลุ่มสุดท้าย
+- **⚙️ Feature flag:** `FLAGS.REVIEWS = false` (T2 เปิดเมื่อพร้อม) · T3 verify ไม่มี flag · `FLAGS.PRICES = false` (P2 เสร็จ+เทส — เปิดเมื่อกรอกราคา ~2 วัน · admin P1 ใช้ได้เลย) · `FLAGS.FARM_PROFILE = false` (**U1+U2 เสร็จ** — เปิดได้หลัง migrate `add_farm_profile`) · `FLAGS.MATCHING = false` (**B1+B2 เสร็จ** — เปิดได้หลัง migrate `add_match_post`) · `FLAGS.COMMUNITY = false` (**C1 เสร็จ+เทสผ่าน** — เปิดเมื่อ C2/C3 เสร็จ + seed กระทู้ 10-15 + migrate prod)
+- **⚠️ migration ค้างสำหรับ prod (8 ตัว):** `add_shop_directory` · `add_contact_reveal` · `add_seller_reviews` · `add_verification_request` · `add_price_tables` · `add_farm_profile` · `add_match_post` · `add_community` — ตอน deploy: `npx dotenv-cli -e .env.production-db -- npx prisma migrate deploy` แล้วรัน `npx dotenv-cli -e .env.production-db -- npx tsx scripts/seed-price-items.ts` (seed 26 รายการราคา)
 - **โดเมนจริง:** taladkaset.com (ผู้ใช้แจ้ง 2026-07-12) — ตั้ง `NEXT_PUBLIC_SITE_URL=https://taladkaset.com` ตอน deploy; แบรนด์ในโค้ดยังเป็น "KasetMarket" ถ้าจะรีแบรนด์ต้องสั่งเป็นงานแยก
 - **อัปเดตล่าสุด:** 2026-07-13
+
+---
+
+## Phase 2 — C1: Community board + threads + replies ✅ (2026-07-13)
+
+> สเปค PLAN-PHASE2.md §6 กลุ่ม C (C1) — ฟอรัมถามตอบเบา · **post-moderation (โพสขึ้นทันที)** · หลัง `FLAGS.COMMUNITY`
+
+### สิ่งที่ทำ
+
+- **Schema:** `Thread` (slug, title, body plain-text, category, pinned/locked/hidden, views, **repliesCount+lastReplyAt denormalize** เรียงหน้า list) + `ThreadImage` (≤3) + `ThreadReply` (hidden) + back-relation `User.threads/threadReplies` · migration `20260713020000_add_community` (**apply dev DB แล้ว, prod ยังไม่**)
+- **`config/forumCategories.ts`:** 8 หมวด (ข้าว/พืชไร่/ผัก-ผลไม้/ปศุสัตว์-ประมง/ปุ๋ย-ยา-โรคพืช/เครื่องจักร-เทคโนโลยี/ราคา-การตลาด/คุยทั่วไป) value ascii + label + icon
+- **`features/community/`:** paths (URL ไทย `/ชุมชน`→`/community`), schemas (zod thread/reply), actions (**createThread/createReply** — post-moderation ขึ้นทันที, ban check, rate limit 5 กระทู้+30 ตอบ/วัน, ตอบแล้ว transaction เพิ่ม repliesCount+lastReplyAt เด้งกระทู้ขึ้น, redirect ต้อง `encodeURI` เพราะ URL ไทย), queries (hub เรียง pinned→lastReplyAt, กระทู้/คำตอบไม่ hidden, counts, sitemap/homepage), components (thread-card/thread-form/reply-form+**ReplyGate**/reply-list/pagination)
+- **หน้า:** `/ชุมชน` hub (dynamic — แท็บหมวด+จำนวน + list + pagination), `/ชุมชน/[slug]` กระทู้ (**ISR 300s** + on-demand revalidate ตอนมีตอบ — reply UI เป็น client `ReplyGate` เช็ค session ฝั่ง client เพื่อคงแคช ISR), `/ชุมชน/new` ตั้งกระทู้ (ล็อกอิน) · view endpoint `/api/community/[id]/view` · rewrite+redirect ใน next.config
+- **กติกา:** โพส/ตอบต้องล็อกอิน (อ่านได้ทุกคน) · รูปผ่าน `/api/upload` (ล็อกอิน) · **ไม่มี flag = อ่านได้-ตอบไม่ได้ ชวนล็อกอิน**
+
+### ทดสอบแล้ว (HTTP E2E 9/9 + integration 12/12 บน `next start` flag=ON + dev DB — เทสเสร็จปิด flag)
+
+- [x] **HTTP (createThread จริง):** ตั้งกระทู้ → **ขึ้นบอร์ดทันที** (live ไม่ hidden) · **rate limit: ตัวที่ 6 โดนบล็อก (คง 5)** · hub+กระทู้รายตัว URL ไทย 200 · `/community`→308 · **guest อ่าน hub+กระทู้ได้ (ไม่ต้องล็อกอิน)**
+- [x] **Integration (reply bump):** ตอบ → **repliesCount+1 + lastReplyAt อัปเดต → กระทู้เด้งขึ้นเหนือกระทู้ที่ใหม่กว่า** · pinned ขึ้นบนสุดเสมอ · hidden ถูกกรอง+เข้า slug ไม่ได้ (null) · filter หมวด · cascade delete · zod validation
+- [x] `npm run build` ผ่านทั้ง flag on/off — ข้อมูล+สคริปต์ทดสอบล้างหมด (Thread 0 แถว)
+
+### งานที่เหลือ
+
+- [ ] **C2 ถัดไป:** รายงานกระทู้/คำตอบ + แอดมินแท็บ "ชุมชน" (ซ่อน/ปักหมุด/ล็อก/ลบ) + ผู้เขียนแก้/ลบเองได้ (24 ชม.) + การ์ดกติกาชุมชน
+- [ ] **C3:** JSON-LD `DiscussionForumPosting` + sitemap + section หน้าแรก + ลิงก์จากบทความ → แล้วเปิด flag (หลัง seed กระทู้)
 
 ---
 

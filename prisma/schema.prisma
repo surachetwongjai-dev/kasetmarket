@@ -61,6 +61,8 @@ model User {
   verificationRequest VerificationRequest? // คำขอยืนยันตัวตน (1 ต่อ user — T3)
   farmProfile     FarmProfile? // โปรไฟล์เกษตรกร (ฟาร์ม/ไร่/ร้าน) — 1 ต่อ user (U1)
   matchPosts      MatchPost[] // โพสกระดานจับคู่ซื้อขาย (B1)
+  threads         Thread[] // กระทู้ชุมชน (C1)
+  threadReplies   ThreadReply[] // คำตอบในกระทู้ (C1)
 }
 
 // OAuth account linking (Auth.js Prisma adapter) — LINE / Google
@@ -328,6 +330,54 @@ model MatchPost {
 
   @@index([type, category, province, status])
   @@index([status, createdAt])
+}
+
+// C1: ชุมชนพูดคุย (PLAN-PHASE2.md กลุ่ม C) — ฟอรัมถามตอบเบา · post-moderation (โพสขึ้นทันที)
+model Thread {
+  id           String        @id @default(cuid())
+  slug         String        @unique
+  title        String
+  body         String        @db.Text // plain text + ขึ้นบรรทัด (ไม่ใช่ markdown)
+  category     String // จาก config/forumCategories.ts
+  images       ThreadImage[] // ≤3
+  author       User          @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  authorId     String
+  pinned       Boolean       @default(false)
+  locked       Boolean       @default(false) // ปิดตอบ
+  hidden       Boolean       @default(false) // แอดมินซ่อน
+  views        Int           @default(0)
+  repliesCount Int           @default(0) // denormalize
+  lastReplyAt  DateTime      @default(now()) // ใช้เรียงหน้า list (กระทู้ที่ขยับล่าสุดขึ้นก่อน)
+  replies      ThreadReply[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@index([category, hidden, lastReplyAt(sort: Desc)])
+  @@index([hidden, lastReplyAt(sort: Desc)])
+}
+
+model ThreadImage {
+  id       String @id @default(cuid())
+  url      String
+  order    Int    @default(0)
+  thread   Thread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  threadId String
+
+  @@index([threadId])
+}
+
+model ThreadReply {
+  id        String   @id @default(cuid())
+  thread    Thread   @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  threadId  String
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  authorId  String
+  body      String   @db.Text
+  hidden    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([threadId, createdAt])
 }
 
 // T3: คำขอยืนยันตัวตน — ตรวจหลักฐานนอกระบบ (LINE OA) แล้วบันทึกแค่ผล+วิธี
