@@ -1,4 +1,4 @@
-// หน้าประกาศรายตัว — ISR 300s + on-demand revalidate เมื่อผู้ขายแก้ (M5 actions)
+// หน้าประกาศรายตัว — render แบบ dynamic
 // JSON-LD Product/Offer + OG meta ตาม SEO strategy (CLAUDE.md §9)
 
 import type { Metadata } from "next";
@@ -24,8 +24,6 @@ import { FLAGS } from "@/config/flags";
 import { getCategoryLabel } from "@/config/categories";
 import { getUnitLabel } from "@/config/units";
 import { formatPrice, formatThaiDate, formatTimeAgo } from "@/lib/format";
-
-// [BISECT TEST] revalidate ถอดชั่วคราว
 
 type Props = { params: Promise<{ slug: string }> };
 
