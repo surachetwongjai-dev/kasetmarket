@@ -8,6 +8,7 @@ const NAV_LINKS = [
   { href: "/ร้านค้า", label: "ร้านค้าเกษตร" },
   ...(FLAGS.PRICES ? [{ href: "/ราคาสินค้าเกษตร", label: "ราคากลาง" }] : []),
   { href: "/articles", label: "บทความเกษตร" },
+  ...(FLAGS.COMMUNITY ? [{ href: "/ชุมชน", label: "ชุมชน" }] : []),
 ];
 
 export function SiteHeader() {

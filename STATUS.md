@@ -2,11 +2,35 @@
 
 > อัปเดตหลังจบทุก milestone — session ใหม่อ่านไฟล์นี้คู่กับ CLAUDE.md + PLAN.md
 
-- **Milestone ปัจจุบัน:** Phase 2 — **กลุ่ม T** + **P (P1+P2)** + **U (U1+U2)** + **B (B1+B2) เสร็จครบ ✅** + **กลุ่ม C — C1+C2 (บอร์ด+กระทู้+ตอบ+moderation) เสร็จ ✅** · ก้อนถัดไป = **C3 (SEO+จุดดึงเข้า)** · เหลือ **กลุ่ม S (ค่าขนส่ง)** เป็นกลุ่มสุดท้าย
-- **⚙️ Feature flag:** `FLAGS.REVIEWS = false` (T2 เปิดเมื่อพร้อม) · T3 verify ไม่มี flag · `FLAGS.PRICES = false` (P2 เสร็จ+เทส — เปิดเมื่อกรอกราคา ~2 วัน · admin P1 ใช้ได้เลย) · `FLAGS.FARM_PROFILE = false` (**U1+U2 เสร็จ** — เปิดได้หลัง migrate `add_farm_profile`) · `FLAGS.MATCHING = false` (**B1+B2 เสร็จ** — เปิดได้หลัง migrate `add_match_post`) · `FLAGS.COMMUNITY = false` (**C1+C2 เสร็จ+เทสผ่าน** — เปิดเมื่อ C3 เสร็จ + seed กระทู้ 10-15 + migrate prod)
+- **Milestone ปัจจุบัน:** Phase 2 — **กลุ่ม T** + **P (P1+P2)** + **U (U1+U2)** + **B (B1+B2)** + **C (ชุมชน C1+C2+C3) เสร็จครบ ✅** · เหลือ **กลุ่ม S (ค่าขนส่ง) — S1** เป็นกลุ่มสุดท้ายของ Phase 2
+- **⚙️ Feature flag:** `FLAGS.REVIEWS = false` (T2 เปิดเมื่อพร้อม) · T3 verify ไม่มี flag · `FLAGS.PRICES = false` (P2 เสร็จ+เทส — เปิดเมื่อกรอกราคา ~2 วัน · admin P1 ใช้ได้เลย) · `FLAGS.FARM_PROFILE = false` (**U1+U2 เสร็จ** — เปิดได้หลัง migrate `add_farm_profile`) · `FLAGS.MATCHING = false` (**B1+B2 เสร็จ** — เปิดได้หลัง migrate `add_match_post`) · `FLAGS.COMMUNITY = false` (**C1+C2+C3 เสร็จ+เทสผ่านครบ** — เปิดเมื่อพร้อมดูแล/ตอบสม่ำเสมอ + seed กระทู้ 10-15 + migrate prod)
 - **⚠️ migration ค้างสำหรับ prod (9 ตัว):** `add_shop_directory` · `add_contact_reveal` · `add_seller_reviews` · `add_verification_request` · `add_price_tables` · `add_farm_profile` · `add_match_post` · `add_community` · `add_forum_report` — ตอน deploy: `npx dotenv-cli -e .env.production-db -- npx prisma migrate deploy` แล้วรัน `npx dotenv-cli -e .env.production-db -- npx tsx scripts/seed-price-items.ts` (seed 26 รายการราคา)
 - **โดเมนจริง:** taladkaset.com (ผู้ใช้แจ้ง 2026-07-12) — ตั้ง `NEXT_PUBLIC_SITE_URL=https://taladkaset.com` ตอน deploy; แบรนด์ในโค้ดยังเป็น "KasetMarket" ถ้าจะรีแบรนด์ต้องสั่งเป็นงานแยก
 - **อัปเดตล่าสุด:** 2026-07-13
+
+---
+
+## Phase 2 — C3: Community SEO + entry points ✅ (2026-07-13)
+
+> สเปค PLAN-PHASE2.md §6 กลุ่ม C (C3) — SEO + จุดดึงเข้า · หลัง `FLAGS.COMMUNITY` · **ปิดกลุ่ม C ครบ**
+
+### สิ่งที่ทำ
+
+- **JSON-LD `DiscussionForumPosting`** บนหน้ากระทู้ (headline/text/datePublished/author + `InteractionCounter` ตอบ+วิว + `comment[]` จากคำตอบไม่ hidden)
+- **sitemap:** เพิ่มหน้ารวม `/ชุมชน` + กระทู้ไม่ hidden (`getThreadsForSitemap`, หลัง `FLAGS.COMMUNITY`) — ISR 300s ของกระทู้ + on-demand revalidate (C1) ทำงานอยู่แล้ว
+- **จุดดึงเข้า:** nav header ลิงก์ "ชุมชน" · หน้าแรก section "💬 จากชุมชน" (3 กระทู้ล่าสุด `getLatestThreads`) · **หน้าบทความลิงก์ "💬 คุยเรื่องนี้...ในชุมชน"** ตาม `relatedForumCategory` map ใน `config/articleCategories.ts` (ปุ๋ย/โรคพืช→fertilizer-disease · ราคาตลาด→price-market · เทคนิค→machinery-tech · ข่าวเกษตร→general) — ทั้งหมดโผล่เฉพาะ flag เปิด
+
+### ทดสอบแล้ว (9/9 บน `next start` flag=ON + dev DB — เทสเสร็จปิด flag)
+
+- [x] **JSON-LD:** หน้ากระทู้มี `DiscussionForumPosting` + `comment` (คำตอบ) + `InteractionCounter`
+- [x] **sitemap/feed logic:** `getThreadsForSitemap`/`getLatestThreads` รวมกระทู้ visible + **กัน hidden ออก** (route sitemap/หน้าแรกเป็น ISR prerender — เทส logic ผ่าน query เพราะ cache ตอน build)
+- [x] nav มีลิงก์ "ชุมชน" · **บทความมีลิงก์ "คุยเรื่องนี้กับเพื่อนเกษตรกรในชุมชน"**
+- [x] `npm run build` ผ่านทั้ง flag on/off — ข้อมูล+สคริปต์ทดสอบล้างหมด
+
+### งานที่เหลือ (ฝั่งคุณ ก่อนเปิด flag)
+
+- [ ] seed กระทู้จริง 10-15 (แปลงจากคอมเมนต์เด่นใน YouTube ได้) + ตั้งเวลาตอบทุกวันช่วงแรก ≥2 สัปดาห์ → แล้วเปิด `FLAGS.COMMUNITY=true`
+- [ ] ตอน deploy prod: migration `add_community` + `add_forum_report`
 
 ---
 

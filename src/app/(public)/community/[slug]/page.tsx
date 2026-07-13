@@ -50,8 +50,40 @@ export default async function ThreadPage({ params }: Props) {
   const replies = await getThreadReplies(thread.id);
   const cat = getForumCategory(thread.category);
 
+  // JSON-LD DiscussionForumPosting (SEO — C3)
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "DiscussionForumPosting",
+    headline: thread.title,
+    text: thread.body,
+    datePublished: thread.createdAt.toISOString(),
+    author: { "@type": "Person", name: thread.author.name },
+    interactionStatistic: [
+      {
+        "@type": "InteractionCounter",
+        interactionType: "https://schema.org/CommentAction",
+        userInteractionCount: thread.repliesCount,
+      },
+      {
+        "@type": "InteractionCounter",
+        interactionType: "https://schema.org/ViewAction",
+        userInteractionCount: thread.views,
+      },
+    ],
+    comment: replies.map((r) => ({
+      "@type": "Comment",
+      text: r.body,
+      datePublished: r.createdAt.toISOString(),
+      author: { "@type": "Person", name: r.author.name },
+    })),
+  };
+
   return (
     <main className="mx-auto w-full max-w-3xl px-4 py-6">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <ViewTracker
         endpoint={`/api/community/${thread.id}/view`}
         dedupeKey={`thread:${thread.id}`}

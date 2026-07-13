@@ -24,6 +24,12 @@ import {
   matchPostPath,
   matchAbsoluteUrl,
 } from "@/features/matching";
+import {
+  getThreadsForSitemap,
+  COMMUNITY_BASE,
+  threadPath,
+  communityAbsoluteUrl,
+} from "@/features/community";
 import { getShopCategory } from "@/config/shopCategories";
 import { FLAGS } from "@/config/flags";
 import { SITE_URL } from "@/config/site";
@@ -31,13 +37,15 @@ import { SITE_URL } from "@/config/site";
 export const revalidate = 3600;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [listings, articles, shops, priceItems, matchPosts] = await Promise.all([
-    getAllActiveListingSlugs(),
-    getAllPublishedArticleSlugs(),
-    getAllApprovedShops(),
-    FLAGS.PRICES ? getPriceItemsForSitemap() : Promise.resolve([]),
-    FLAGS.MATCHING ? getMatchPostsForSitemap() : Promise.resolve([]),
-  ]);
+  const [listings, articles, shops, priceItems, matchPosts, threads] =
+    await Promise.all([
+      getAllActiveListingSlugs(),
+      getAllPublishedArticleSlugs(),
+      getAllApprovedShops(),
+      FLAGS.PRICES ? getPriceItemsForSitemap() : Promise.resolve([]),
+      FLAGS.MATCHING ? getMatchPostsForSitemap() : Promise.resolve([]),
+      FLAGS.COMMUNITY ? getThreadsForSitemap() : Promise.resolve([]),
+    ]);
 
   const staticPages: MetadataRoute.Sitemap = [
     { url: `${SITE_URL}/`, changeFrequency: "daily", priority: 1 },
@@ -135,6 +143,23 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       ]
     : [];
 
+  // ชุมชน: หน้ารวม + กระทู้ไม่ hidden (หลัง FLAGS.COMMUNITY)
+  const communityPages: MetadataRoute.Sitemap = threads.length
+    ? [
+        {
+          url: communityAbsoluteUrl(COMMUNITY_BASE),
+          changeFrequency: "daily",
+          priority: 0.7,
+        },
+        ...threads.map((t) => ({
+          url: communityAbsoluteUrl(threadPath(t.slug)),
+          lastModified: t.updatedAt,
+          changeFrequency: "weekly" as const,
+          priority: 0.5,
+        })),
+      ]
+    : [];
+
   return [
     ...staticPages,
     ...listingPages,
@@ -142,5 +167,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...directoryPages,
     ...pricePages,
     ...matchingPages,
+    ...communityPages,
   ];
 }

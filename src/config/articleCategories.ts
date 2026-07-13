@@ -8,14 +8,16 @@ export type ArticleCategory = {
   value: string; // = label (เก็บใน DB)
   /** หมวดประกาศที่เกี่ยวข้อง (value จาก config/categories.ts) สำหรับ CTA — null = ไม่มี */
   relatedListingCategory: string | null;
+  /** หมวดชุมชนที่เกี่ยวข้อง (value จาก config/forumCategories.ts) — ลิงก์ "คุยในชุมชน" (C3) */
+  relatedForumCategory: string | null;
 };
 
 export const ARTICLE_CATEGORIES: ArticleCategory[] = [
-  { value: "ปุ๋ย", relatedListingCategory: "fertilizer" },
-  { value: "โรคพืช", relatedListingCategory: "fertilizer" },
-  { value: "ราคาตลาด", relatedListingCategory: null },
-  { value: "เทคนิค", relatedListingCategory: null },
-  { value: "ข่าวเกษตร", relatedListingCategory: null },
+  { value: "ปุ๋ย", relatedListingCategory: "fertilizer", relatedForumCategory: "fertilizer-disease" },
+  { value: "โรคพืช", relatedListingCategory: "fertilizer", relatedForumCategory: "fertilizer-disease" },
+  { value: "ราคาตลาด", relatedListingCategory: null, relatedForumCategory: "price-market" },
+  { value: "เทคนิค", relatedListingCategory: null, relatedForumCategory: "machinery-tech" },
+  { value: "ข่าวเกษตร", relatedListingCategory: null, relatedForumCategory: "general" },
 ];
 
 export const ARTICLE_CATEGORY_VALUES = ARTICLE_CATEGORIES.map((c) => c.value);
@@ -28,5 +30,12 @@ export function relatedListingCategoryOf(articleCategory: string): string | null
   return (
     ARTICLE_CATEGORIES.find((c) => c.value === articleCategory)
       ?.relatedListingCategory ?? null
+  );
+}
+
+export function relatedForumCategoryOf(articleCategory: string): string | null {
+  return (
+    ARTICLE_CATEGORIES.find((c) => c.value === articleCategory)
+      ?.relatedForumCategory ?? null
   );
 }

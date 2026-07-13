@@ -11,8 +11,13 @@ import {
 import { ArticleCard } from "@/features/articles/components/article-card";
 import { YoutubeEmbed } from "@/features/articles/components/youtube-embed";
 import { ViewTracker } from "@/features/listings/components/view-tracker";
-import { relatedListingCategoryOf } from "@/config/articleCategories";
+import {
+  relatedListingCategoryOf,
+  relatedForumCategoryOf,
+} from "@/config/articleCategories";
 import { getCategoryLabel } from "@/config/categories";
+import { FLAGS } from "@/config/flags";
+import { communityBoardPath } from "@/features/community";
 import { renderMarkdown, stripMarkdown } from "@/lib/markdown";
 import { getYouTubeId, youtubeThumb, youtubeEmbedUrl } from "@/lib/youtube";
 import { formatThaiDate } from "@/lib/format";
@@ -49,6 +54,9 @@ export default async function ArticleDetailPage({ params }: Props) {
 
   const related = await getRelatedArticles(article);
   const listingCategory = relatedListingCategoryOf(article.category);
+  const forumCategory = FLAGS.COMMUNITY
+    ? relatedForumCategoryOf(article.category)
+    : null;
   const html = renderMarkdown(article.content);
 
   const jsonLd = {
@@ -152,6 +160,19 @@ export default async function ArticleDetailPage({ params }: Props) {
         >
           <span className="font-medium text-primary-dk">
             🛒 ดูประกาศขายหมวด{getCategoryLabel(listingCategory)}ในตลาด
+          </span>
+          <span className="shrink-0 text-primary">→</span>
+        </Link>
+      )}
+
+      {/* CTA: บทความ → คุยในชุมชนตามหมวด (C3) */}
+      {forumCategory && (
+        <Link
+          href={communityBoardPath({ category: forumCategory })}
+          className="mt-4 flex items-center justify-between gap-3 rounded-xl border border-border bg-card p-4 transition-colors hover:bg-muted"
+        >
+          <span className="font-medium text-primary-dk">
+            💬 คุยเรื่องนี้กับเพื่อนเกษตรกรในชุมชน
           </span>
           <span className="shrink-0 text-primary">→</span>
         </Link>

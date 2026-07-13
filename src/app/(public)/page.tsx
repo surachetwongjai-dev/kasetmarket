@@ -23,6 +23,11 @@ import {
   MatchPostCard,
   MATCHING_BASE,
 } from "@/features/matching";
+import {
+  getLatestThreads,
+  ThreadCard,
+  COMMUNITY_BASE,
+} from "@/features/community";
 import { CATEGORIES } from "@/config/categories";
 import { FLAGS } from "@/config/flags";
 import { SITE_NAME, SITE_URL, YOUTUBE_CHANNEL_URL } from "@/config/site";
@@ -69,13 +74,15 @@ const siteJsonLd = {
 };
 
 export default async function HomePage() {
-  const [featured, latest, articles, homePrices, matchPosts] = await Promise.all([
-    getFeaturedListings(4),
-    getLatestListings(12),
-    getPublishedArticles({ page: 1 }),
-    FLAGS.PRICES ? getHomeFeaturedPrices() : Promise.resolve([]),
-    FLAGS.MATCHING ? getLatestMatchPosts(6) : Promise.resolve([]),
-  ]);
+  const [featured, latest, articles, homePrices, matchPosts, threads] =
+    await Promise.all([
+      getFeaturedListings(4),
+      getLatestListings(12),
+      getPublishedArticles({ page: 1 }),
+      FLAGS.PRICES ? getHomeFeaturedPrices() : Promise.resolve([]),
+      FLAGS.MATCHING ? getLatestMatchPosts(6) : Promise.resolve([]),
+      FLAGS.COMMUNITY ? getLatestThreads(3) : Promise.resolve([]),
+    ]);
 
   return (
     <div className="mx-auto max-w-6xl px-4">
@@ -251,6 +258,21 @@ export default async function HomePage() {
             ดูช่อง YouTube
           </a>
         </section>
+      )}
+
+      {/* จากชุมชน (เมื่อเปิด FLAGS.COMMUNITY) */}
+      {threads.length > 0 && (
+        <HomeSection
+          title="💬 จากชุมชน"
+          href={COMMUNITY_BASE}
+          linkLabel="เข้าชุมชน"
+        >
+          <div className="flex flex-col gap-3">
+            {threads.map((thread) => (
+              <ThreadCard key={thread.id} thread={thread} />
+            ))}
+          </div>
+        </HomeSection>
       )}
 
       {/* บทความล่าสุด */}
