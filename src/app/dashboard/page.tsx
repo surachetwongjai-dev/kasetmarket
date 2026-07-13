@@ -8,6 +8,7 @@ import { auth } from "@/features/auth";
 import { logoutAction } from "@/features/auth/actions";
 import { prisma } from "@/lib/prisma";
 import { VerifyCard, getMyVerificationRequest } from "@/features/trust";
+import { FLAGS } from "@/config/flags";
 import { Badge } from "@/components/ui/badge";
 
 export const metadata: Metadata = {
@@ -69,6 +70,17 @@ export default async function DashboardPage() {
             แก้ไข ปิดการขาย ต่ออายุ และดูยอดวิว
           </span>
         </Link>
+        {FLAGS.FARM_PROFILE && (
+          <Link
+            href="/dashboard/profile"
+            className="flex min-h-24 flex-col justify-center rounded-xl border border-border bg-card p-5 transition-colors hover:bg-muted"
+          >
+            <span className="text-lg font-semibold">โปรไฟล์เกษตรกร</span>
+            <span className="mt-1 text-sm text-muted-foreground">
+              เพิ่มข้อมูลฟาร์ม/ไร่/ร้าน + รูป ให้ผู้ซื้อเชื่อใจ
+            </span>
+          </Link>
+        )}
       </div>
 
       <div className="mt-4">

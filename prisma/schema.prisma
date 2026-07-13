@@ -45,6 +45,7 @@ model User {
   reviewsReceived SellerReview[] @relation("ReviewsReceived") // รีวิวที่ผู้ขายคนนี้ได้รับ
   reviewsGiven    SellerReview[] @relation("ReviewsGiven")    // รีวิวที่ user คนนี้เขียนให้คนอื่น
   verificationRequest VerificationRequest? // คำขอยืนยันตัวตน (1 ต่อ user — T3)
+  farmProfile     FarmProfile? // โปรไฟล์เกษตรกร (ฟาร์ม/ไร่/ร้าน) — 1 ต่อ user (U1)
 }
 
 // OAuth account linking (Auth.js Prisma adapter) — LINE / Google
@@ -96,6 +97,32 @@ model Listing {
 
   @@index([category, province, status])
   @@index([status, createdAt])
+}
+
+// U1: โปรไฟล์เกษตรกร (ฟาร์ม/ไร่/ร้าน) — PLAN-PHASE2.md กลุ่ม U · 1 โปรไฟล์/user
+// province/district = ที่ตั้งฟาร์ม (mirror User.province ตอนบันทึกเพื่อให้ข้อมูลตรงกัน)
+model FarmProfile {
+  id        String             @id @default(cuid())
+  user      User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String             @unique
+  bio       String?            @db.Text // แนะนำตัว/กิจการ ≤1,000 ตัวอักษร
+  farmTypes String[] // value จาก config/farmTypes.ts (เลือกได้หลายอย่าง)
+  products  String? // สินค้าหลักที่ทำ (text สั้น)
+  sizeRai   Int? // ขนาดพื้นที่ (ไร่)
+  province  String?
+  district  String?
+  images    FarmProfileImage[] // ≤4 รูป (สวน/ฟาร์ม/หน้าร้าน)
+  updatedAt DateTime           @updatedAt
+}
+
+model FarmProfileImage {
+  id        String      @id @default(cuid())
+  url       String
+  order     Int         @default(0)
+  profile   FarmProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  profileId String
+
+  @@index([profileId])
 }
 
 model ListingImage {

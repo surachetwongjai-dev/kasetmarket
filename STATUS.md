@@ -2,11 +2,37 @@
 
 > อัปเดตหลังจบทุก milestone — session ใหม่อ่านไฟล์นี้คู่กับ CLAUDE.md + PLAN.md
 
-- **Milestone ปัจจุบัน:** Phase 2 — **กลุ่ม T (Trust) เสร็จครบ** + **กลุ่ม P (ราคากลาง P1+P2) เสร็จครบ ✅** · ก้อนถัดไปตามแผน = **กลุ่ม U (โปรไฟล์เกษตรกร) — U1** (หรือ P3 import อัตโนมัติ ทำหลังมีโดเมนจริง)
-- **⚙️ Feature flag:** `FLAGS.REVIEWS = false` (T2 เปิดเมื่อพร้อม) · T3 verify ไม่มี flag · `FLAGS.PRICES = false` (หน้า public P2 สร้างเสร็จ+เทสผ่าน — เปิด `true` เมื่อกรอกราคา ~2 วันแล้ว จะได้มีลูกศรเปลี่ยนแปลง · admin CMS P1 เปิดใช้ได้เลยไม่ผูก flag)
-- **⚠️ migration ค้างสำหรับ prod (5 ตัว):** `add_shop_directory` · `add_contact_reveal` · `add_seller_reviews` · `add_verification_request` · `add_price_tables` — ตอน deploy: `npx dotenv-cli -e .env.production-db -- npx prisma migrate deploy` แล้วรัน `npx dotenv-cli -e .env.production-db -- npx tsx scripts/seed-price-items.ts` (seed 26 รายการราคา)
+- **Milestone ปัจจุบัน:** Phase 2 — **กลุ่ม T (Trust) เสร็จครบ** + **กลุ่ม P (ราคากลาง P1+P2) เสร็จครบ ✅** + **กลุ่ม U — U1 (schema + ฟอร์มแก้โปรไฟล์) เสร็จ ✅** · ก้อนถัดไปตามแผน = **U2 (หน้าโปรไฟล์ public โฉมใหม่)** (หรือ P3 import อัตโนมัติ ทำหลังมีโดเมนจริง)
+- **⚙️ Feature flag:** `FLAGS.REVIEWS = false` (T2 เปิดเมื่อพร้อม) · T3 verify ไม่มี flag · `FLAGS.PRICES = false` (หน้า public P2 สร้างเสร็จ+เทสผ่าน — เปิด `true` เมื่อกรอกราคา ~2 วันแล้ว จะได้มีลูกศรเปลี่ยนแปลง · admin CMS P1 เปิดใช้ได้เลยไม่ผูก flag) · `FLAGS.FARM_PROFILE = false` (U1 ฟอร์มแก้ `/dashboard/profile` เสร็จ+เทสผ่าน — เปิด `true` เมื่อ U2 หน้า public เสร็จ)
+- **⚠️ migration ค้างสำหรับ prod (6 ตัว):** `add_shop_directory` · `add_contact_reveal` · `add_seller_reviews` · `add_verification_request` · `add_price_tables` · `add_farm_profile` — ตอน deploy: `npx dotenv-cli -e .env.production-db -- npx prisma migrate deploy` แล้วรัน `npx dotenv-cli -e .env.production-db -- npx tsx scripts/seed-price-items.ts` (seed 26 รายการราคา)
 - **โดเมนจริง:** taladkaset.com (ผู้ใช้แจ้ง 2026-07-12) — ตั้ง `NEXT_PUBLIC_SITE_URL=https://taladkaset.com` ตอน deploy; แบรนด์ในโค้ดยังเป็น "KasetMarket" ถ้าจะรีแบรนด์ต้องสั่งเป็นงานแยก
-- **อัปเดตล่าสุด:** 2026-07-12
+- **อัปเดตล่าสุด:** 2026-07-13
+
+---
+
+## Phase 2 — U1: Farm profile schema + edit form ✅ (2026-07-13)
+
+> สเปค PLAN-PHASE2.md §4 กลุ่ม U (U1) — schema + ฟอร์มแก้โปรไฟล์ · หลัง `FLAGS.FARM_PROFILE` (ปิดไว้ เปิดเมื่อ U2 หน้า public เสร็จ)
+
+### สิ่งที่ทำ
+
+- **Schema:** `FarmProfile` (`userId @unique` = 1 โปรไฟล์/user, bio `@db.Text`, `farmTypes String[]`, products, sizeRai Int?, province/district, updatedAt) + `FarmProfileImage` (แพทเทิร์น ListingImage, ≤4 รูป) + back-relation `User.farmProfile` · migration `20260713000000_add_farm_profile` (gen ด้วย `migrate diff` — **apply dev DB แล้ว, prod ยังไม่**)
+- **`config/farmTypes.ts`:** 8 ประเภท (นาข้าว/สวนผลไม้/ไร่พืชไร่/ฟาร์มปศุสัตว์/บ่อปลา-กุ้ง/ร้านค้าเกษตร/โรงงาน-ผู้รับซื้อ/อื่นๆ) value ascii + label + icon (helper `getFarmTypeLabel`)
+- **`features/profile/`:** schemas (zod profile + `profileFormDataToObject` — จัดการ `farmTypes` getAll, `sizeRai` ว่าง→undefined), actions (**saveFarmProfileAction** — transaction: `User.update`(name/province) + `FarmProfile.upsert`(create/update+แทนรูปทั้งชุด) + rate limit in-memory 10 ครั้ง/วัน/user), queries (getFarmProfile), components (**profile-form** reuse `ImageUploader max={4}`)
+- **`/dashboard/profile`** (dynamic, หลัง flag → notFound เมื่อปิด): ฟอร์มเดียวแก้ ชื่อที่แสดง (User.name) + จังหวัด/อำเภอ + ประเภทกิจการ (checkbox หลายค่า) + สินค้าหลัก + ขนาดไร่ + แนะนำตัว + รูป ≤4 · บันทึกแล้วโชว์ success + revalidate `/sellers/[id]` ทันที · การ์ด "โปรไฟล์เกษตรกร" ในแดชบอร์ด (เมื่อ flag เปิด)
+- **การตัดสินใจ:** `province` เขียนลงทั้ง `User.province` (ใช้ทั้งเว็บ เช่น prefill ประกาศ) และ `FarmProfile.province` (ที่ตั้งฟาร์ม) — mirror จาก picker เดียว ไม่ให้มี 2 ช่องจังหวัดบนมือถือ · **name บังคับ** (User.name เป็น NOT NULL) ที่เหลือไม่บังคับ
+
+### ทดสอบแล้ว (integration + E2E บน `next start` prod build flag=ON + dev DB — เทสเสร็จปิด flag กลับ)
+
+- [x] **Integration 26/26** (validation จริง + DB write จริง): create branch ครบ field + 2 รูปเรียงถูก · update branch เคลียร์ค่า (province→null, sizeRai→null, farmTypes→[]) + แทนรูปเหลือ 1 (ไม่ค้าง) + upsert แถวเดิม · `sizeRai` ว่าง→undefined ไม่ใช่ 0 · name ว่าง/province ปลอม/farmType ปลอม → parse ล้มเหลว · cascade ลบ user → FarmProfile+รูปหายด้วย
+- [x] **HTTP:** flag off → `/dashboard/profile` 404 (build static) · flag on ไม่ล็อกอิน → 307 ไป `/login` · ล็อกอิน admin → ฟอร์ม 200 ครบทุก field
+- [x] **no-JS server-action submit จริง** → 200, `User.name/province` + `FarmProfile` (farmTypes 2/products/sizeRai 42/bio/district) ลง DB ถูก · **`/sellers/[id]` revalidate 200** ทันที
+- [x] `npm run build` ผ่านทั้ง flag on/off — ข้อมูลทดสอบ+สคริปต์ล้างหมด
+
+### งานที่เหลือ
+
+- [ ] **U2 ถัดไป:** ปรับ `/sellers/[id]` โฉมใหม่ — chips ประเภทกิจการ + bio + gallery รูปฟาร์ม + "กำลังขายตอนนี้" + รีวิว (T2) + ปุ่มรายงานโปรไฟล์ · ผู้ใช้ไม่มี FarmProfile = หน้าเดิม (ไม่พังของเก่า) · `FLAGS.FARM_PROFILE` คุมเฉพาะ section ใหม่
+- [ ] ตอน deploy prod: migration `add_farm_profile` (ต่อจากที่ค้าง) — `npx dotenv-cli -e .env.production-db -- npx prisma migrate deploy`
 
 ---
 
