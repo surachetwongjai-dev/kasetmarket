@@ -2,11 +2,35 @@
 
 > อัปเดตหลังจบทุก milestone — session ใหม่อ่านไฟล์นี้คู่กับ CLAUDE.md + PLAN.md
 
-- **Milestone ปัจจุบัน:** Phase 2 — **กลุ่ม T** + **P (P1+P2)** + **U (U1+U2)** + **B (B1+B2)** + **C (ชุมชน C1+C2+C3) เสร็จครบ ✅** · เหลือ **กลุ่ม S (ค่าขนส่ง) — S1** เป็นกลุ่มสุดท้ายของ Phase 2
-- **⚙️ Feature flag:** `FLAGS.REVIEWS = false` (T2 เปิดเมื่อพร้อม) · T3 verify ไม่มี flag · `FLAGS.PRICES = false` (P2 เสร็จ+เทส — เปิดเมื่อกรอกราคา ~2 วัน · admin P1 ใช้ได้เลย) · `FLAGS.FARM_PROFILE = false` (**U1+U2 เสร็จ** — เปิดได้หลัง migrate `add_farm_profile`) · `FLAGS.MATCHING = false` (**B1+B2 เสร็จ** — เปิดได้หลัง migrate `add_match_post`) · `FLAGS.COMMUNITY = false` (**C1+C2+C3 เสร็จ+เทสผ่านครบ** — เปิดเมื่อพร้อมดูแล/ตอบสม่ำเสมอ + seed กระทู้ 10-15 + migrate prod)
+- **Milestone ปัจจุบัน:** Phase 2 — **กลุ่ม T** + **P (P1+P2)** + **U (U1+U2)** + **B (B1+B2)** + **C (ชุมชน C1+C2+C3)** + **S (ค่าขนส่ง S1)** เสร็จครบ ✅ — **จบ Phase 2 ทั้งหมด** (S2/B3 = Phase 2.5–3)
+- **⚙️ Feature flag:** `FLAGS.REVIEWS = false` (T2 เปิดเมื่อพร้อม) · T3 verify ไม่มี flag · `FLAGS.PRICES = false` (P2 เสร็จ+เทส — เปิดเมื่อกรอกราคา ~2 วัน · admin P1 ใช้ได้เลย) · `FLAGS.FARM_PROFILE = false` (**U1+U2 เสร็จ** — เปิดได้หลัง migrate `add_farm_profile`) · `FLAGS.MATCHING = false` (**B1+B2 เสร็จ** — เปิดได้หลัง migrate `add_match_post`) · `FLAGS.COMMUNITY = false` (**C1+C2+C3 เสร็จ** — เปิดเมื่อพร้อมดูแล + seed กระทู้ 10-15 + migrate prod) · `FLAGS.SHIPPING_RATES = false` (**S1 เสร็จ+เทสผ่าน** — หน้า utility ล้วน **ไม่มี migration** เปิด true ได้เลยตอน deploy)
 - **⚠️ migration ค้างสำหรับ prod (9 ตัว):** `add_shop_directory` · `add_contact_reveal` · `add_seller_reviews` · `add_verification_request` · `add_price_tables` · `add_farm_profile` · `add_match_post` · `add_community` · `add_forum_report` — ตอน deploy: `npx dotenv-cli -e .env.production-db -- npx prisma migrate deploy` แล้วรัน `npx dotenv-cli -e .env.production-db -- npx tsx scripts/seed-price-items.ts` (seed 26 รายการราคา)
 - **โดเมนจริง:** taladkaset.com (ผู้ใช้แจ้ง 2026-07-12) — ตั้ง `NEXT_PUBLIC_SITE_URL=https://taladkaset.com` ตอน deploy; แบรนด์ในโค้ดยังเป็น "KasetMarket" ถ้าจะรีแบรนด์ต้องสั่งเป็นงานแยก
 - **อัปเดตล่าสุด:** 2026-07-13
+
+---
+
+## Phase 2 — S1: Shipping rate checker ✅ (2026-07-13) — 🎉 ปิด Phase 2
+
+> สเปค PLAN-PHASE2.md §7 กลุ่ม S (S1) — หน้าเช็คค่าส่งทุกค่าย ตาราง static + เครื่องคิดฝั่ง client · หลัง `FLAGS.SHIPPING_RATES` · **ไม่มี DB/migration** (เรทอยู่ใน config)
+
+### สิ่งที่ทำ
+
+- **`config/shippingRates.ts`:** 7 ค่าย (Flash · BEST · J&T · Kerry/KEX · ไปรษณีย์ไทย 3 บริการ:ลงทะเบียน/EMS/**EMS ผลไม้** · Nim Express · Inter Express) — แต่ละค่ายมี `url` ทางการ, `phone`, แฟลก `freshSupport`🍎/`coldChain`❄️/`codSupport`✓, `volumetricDivisor` (เอกชน 5000, ไปรษณีย์ 0=น้ำหนักจริง), ตารางเรทตามช่วงน้ำหนัก + `perKgOver` + `SHIPPING_UPDATED_AT` — **แก้เรทที่นี่ที่เดียว, ทบทวนเดือนละครั้ง**
+- **`features/shipping/`:** `calc.ts` (ฟังก์ชันบริสุทธิ์ `quoteAll`/`servicePrice`/`volumetricKg`/`chargeableKg` — คิด `max(น้ำหนักจริง, ปริมาตร)` ต่อค่าย, เรียงถูก→แพง) · `paths.ts` (`SHIPPING_BASE=/เช็คค่าส่ง`, `shippingAbsoluteUrl`) · `components/shipping-calculator.tsx` (client: กรอกน้ำหนัก+ขนาดกล่อง optional → ตารางผลสด, ป้าย, ปุ่ม "เช็คเรทจริง →") · `index.ts`
+- **หน้า `/เช็คค่าส่ง`** (rewrite → `/shipping-rates`, ascii route + redirect กลับ ตามแพทเทิร์นเดิม) — static ล้วน, gate `if (!FLAGS.SHIPPING_RATES) notFound()`, **disclaimer เด่น** (เรทหน้าเคาน์เตอร์ + วันที่อัปเดตจาก config) + **คู่มือ SEO** "ส่งผลไม้/ของสดเลือกเจ้าไหน" (4 หัวข้อ: ผลไม้ตามฤดู/ของสดคุมอุณหภูมิ/พัสดุแห้ง/กล่องใหญ่เบา) + รายชื่อค่าย+ลิงก์ทางการ
+- **จุดดึงเข้า (หลัง flag):** ลิงก์ "🚚 เช็คค่าส่งโดยประมาณ →" ในหน้าประกาศรายตัว · ลิงก์ "เช็คค่าส่งพัสดุ" ใน footer · เข้า sitemap (`shippingAbsoluteUrl`, `changeFrequency: monthly`)
+
+### ทดสอบแล้ว (calc 25/25 + HTTP 12/12 + ลิงก์ประกาศ 1/1 บน `next start` flag=ON — เทสเสร็จปิด flag)
+
+- [x] **calc:** 2กก. ไม่ใส่ขนาด → เรียงถูก→แพงตรงตาม config (ถูกสุด Flash/BEST 40฿) · **กล่องใหญ่เบา 50×50×50 → volumetric 25กก. ราคาขยับ** (Flash 25→260฿) + ranking เปลี่ยน (ไปรษณีย์ไทย divisor 0 กลายเป็นถูกสุด) · `perKgOver` (Flash 30กก.=320฿) · ทุก URL ค่ายเป็น https
+- [x] **HTTP:** `/เช็คค่าส่ง` 200 + disclaimer/วันที่/คู่มือ/ค่ายครบ · `/shipping-rates`→308→URL ไทย · sitemap มี segment (flag เปิด) · footer + หน้าประกาศมีลิงก์
+- [x] `npm run build` ผ่านทั้ง flag on/off — สคริปต์+ข้อมูลทดสอบล้างหมด (listing/user เหลือ 0/0)
+
+### งานที่เหลือ (ฝั่งคุณ)
+
+- [ ] เปิด `FLAGS.SHIPPING_RATES=true` ได้เลยตอน deploy (ไม่ต้อง migrate) — ก่อนเปิดควรไล่เช็กเรทใน `config/shippingRates.ts` ให้ตรงปัจจุบัน แล้วอัปเดต `SHIPPING_UPDATED_AT`
+- [ ] ตั้งรอบทบทวนเรทเดือนละครั้ง · **S2 (Phase 3):** เชื่อม Shippop API + ปุ่ม "จองส่ง" (ต้องสมัคร merchant ก่อน)
 
 ---
 

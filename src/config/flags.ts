@@ -19,7 +19,7 @@ export const FLAGS = {
   MATCHING: false,
   /** ชุมชนพูดคุยปัญหาเกษตร (กลุ่ม C) — C1+C2+C3 เสร็จ+เทสผ่านครบ; เปิด true เมื่อพร้อมดูแล/ตอบสม่ำเสมอ + seed กระทู้ 10-15 + migrate prod (add_community, add_forum_report) */
   COMMUNITY: false,
-  /** เช็คค่าขนส่งทุกค่าย (กลุ่ม S) */
+  /** เช็คค่าขนส่งทุกค่าย (กลุ่ม S) — S1 เสร็จ+เทสผ่าน; หน้า utility ล้วน ไม่มี migration เปิด true ได้เลยตอน deploy (ทบทวนเรทใน config เดือนละครั้ง) */
   SHIPPING_RATES: false,
 } as const;
 

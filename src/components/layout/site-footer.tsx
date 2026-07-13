@@ -1,8 +1,12 @@
 import Link from "next/link";
+import { FLAGS } from "@/config/flags";
 
 const FOOTER_LINKS = [
   { href: "/about", label: "เกี่ยวกับเรา" },
   { href: "/safety", label: "วิธีซื้อขายปลอดภัย" },
+  ...(FLAGS.SHIPPING_RATES
+    ? [{ href: "/เช็คค่าส่ง", label: "เช็คค่าส่งพัสดุ" }]
+    : []),
   { href: "/privacy", label: "นโยบายความเป็นส่วนตัว" },
   { href: "/terms", label: "ข้อตกลงการใช้งาน" },
 ];

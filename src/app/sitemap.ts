@@ -30,6 +30,7 @@ import {
   threadPath,
   communityAbsoluteUrl,
 } from "@/features/community";
+import { shippingAbsoluteUrl } from "@/features/shipping";
 import { getShopCategory } from "@/config/shopCategories";
 import { FLAGS } from "@/config/flags";
 import { SITE_URL } from "@/config/site";
@@ -160,6 +161,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       ]
     : [];
 
+  // เช็คค่าส่ง: หน้า utility เดี่ยว (หลัง FLAGS.SHIPPING_RATES)
+  const shippingPages: MetadataRoute.Sitemap = FLAGS.SHIPPING_RATES
+    ? [
+        {
+          url: shippingAbsoluteUrl(),
+          changeFrequency: "monthly",
+          priority: 0.6,
+        },
+      ]
+    : [];
+
   return [
     ...staticPages,
     ...listingPages,
@@ -168,5 +180,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...pricePages,
     ...matchingPages,
     ...communityPages,
+    ...shippingPages,
   ];
 }

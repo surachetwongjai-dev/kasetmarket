@@ -19,6 +19,7 @@ import { getShopsForListing } from "@/features/directory/queries";
 import { ShopCard } from "@/features/directory/components/shop-card";
 import { RatingStars, getSellerRatingSummary } from "@/features/trust";
 import { getActiveMatchCount, matchBoardPath } from "@/features/matching";
+import { SHIPPING_BASE } from "@/features/shipping";
 import { FLAGS } from "@/config/flags";
 import { getCategoryLabel } from "@/config/categories";
 import { getUnitLabel } from "@/config/units";
@@ -155,6 +156,15 @@ export default async function ListingDetailPage({ params }: Props) {
                 {matchDemandCount.toLocaleString("th-TH")} ราย
               </span>
               <span aria-hidden>→</span>
+            </Link>
+          )}
+
+          {FLAGS.SHIPPING_RATES && (
+            <Link
+              href={SHIPPING_BASE}
+              className="mt-5 inline-flex items-center gap-1.5 text-sm font-medium text-primary underline-offset-4 hover:underline"
+            >
+              🚚 เช็คค่าส่งโดยประมาณ →
             </Link>
           )}
 
