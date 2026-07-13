@@ -24,6 +24,20 @@ enum ListingStatus {
   REJECTED
 }
 
+// B1: กระดานจับคู่ซื้อขาย (PLAN-PHASE2.md กลุ่ม B)
+enum MatchPostType {
+  SUPPLY // เกษตรกรเสนอผลผลิต (ล่วงหน้าได้)
+  DEMAND // ผู้รับซื้อประกาศรับซื้อ
+}
+
+enum MatchPostStatus {
+  PENDING
+  ACTIVE
+  MATCHED // จับคู่แล้ว — หายจากบอร์ด
+  EXPIRED
+  REJECTED
+}
+
 model User {
   id            String    @id @default(cuid())
   role          Role      @default(SELLER)
@@ -46,6 +60,7 @@ model User {
   reviewsGiven    SellerReview[] @relation("ReviewsGiven")    // รีวิวที่ user คนนี้เขียนให้คนอื่น
   verificationRequest VerificationRequest? // คำขอยืนยันตัวตน (1 ต่อ user — T3)
   farmProfile     FarmProfile? // โปรไฟล์เกษตรกร (ฟาร์ม/ไร่/ร้าน) — 1 ต่อ user (U1)
+  matchPosts      MatchPost[] // โพสกระดานจับคู่ซื้อขาย (B1)
 }
 
 // OAuth account linking (Auth.js Prisma adapter) — LINE / Google
@@ -284,6 +299,35 @@ model PriceEntry {
 
   @@unique([itemId, date])
   @@index([itemId, date(sort: Desc)])
+}
+
+// B1: กระดานจับคู่ซื้อขาย ผลผลิตล่วงหน้า ↔ ประกาศรับซื้อ (reuse หมวด/จังหวัด/สถานะ+คิว จากประกาศ)
+model MatchPost {
+  id           String          @id @default(cuid())
+  slug         String          @unique
+  type         MatchPostType
+  title        String
+  detail       String          @db.Text // สเปค: เกรด ความชื้น ขนาด บรรจุ ฯลฯ
+  category     String // reuse config/categories.ts
+  province     String
+  district     String?
+  quantity     String // free text มีหน่วย เช่น "5 ตัน" "300 กก./สัปดาห์"
+  targetDate   DateTime? // SUPPLY: พร้อมส่งเมื่อไหร่ | DEMAND: ต้องการภายใน
+  priceNote    String? // "ราคาตามตลาด" / "เสนอราคามา" — ไม่บังคับตัวเลข
+  contactPhone String?
+  contactLine  String?
+  status       MatchPostStatus @default(PENDING)
+  rejectReason String?
+  featured     Boolean         @default(false)
+  views        Int             @default(0)
+  expiresAt    DateTime // +30 วัน ต่ออายุได้ (แพทเทิร์นประกาศ)
+  user         User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId       String
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+
+  @@index([type, category, province, status])
+  @@index([status, createdAt])
 }
 
 // T3: คำขอยืนยันตัวตน — ตรวจหลักฐานนอกระบบ (LINE OA) แล้วบันทึกแค่ผล+วิธี

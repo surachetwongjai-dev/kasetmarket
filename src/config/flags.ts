@@ -15,7 +15,7 @@ export const FLAGS = {
   PRICES: false,
   /** โปรไฟล์เกษตรกร (ฟาร์ม/ไร่/ร้าน) (กลุ่ม U) — U1+U2 เสร็จ+เทสผ่าน; เปิด true ตอน deploy หลังรัน migration add_farm_profile บน prod */
   FARM_PROFILE: false,
-  /** กระดานจับคู่ซื้อขาย Demand & Supply (กลุ่ม B) */
+  /** กระดานจับคู่ซื้อขาย Demand & Supply (กลุ่ม B) — B1 (CRUD+moderation) เสร็จ+เทสผ่าน; เปิด true เมื่อ B2 (หน้ากระดาน public) เสร็จ + migrate prod */
   MATCHING: false,
   /** ชุมชนพูดคุยปัญหาเกษตร (กลุ่ม C) */
   COMMUNITY: false,

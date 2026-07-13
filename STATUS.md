@@ -2,11 +2,38 @@
 
 > อัปเดตหลังจบทุก milestone — session ใหม่อ่านไฟล์นี้คู่กับ CLAUDE.md + PLAN.md
 
-- **Milestone ปัจจุบัน:** Phase 2 — **กลุ่ม T (Trust) เสร็จครบ** + **กลุ่ม P (ราคากลาง P1+P2) เสร็จครบ ✅** + **กลุ่ม U (โปรไฟล์เกษตรกร U1+U2) เสร็จครบ ✅** · ก้อนถัดไปตามแผน = **กลุ่ม B (กระดานจับคู่ซื้อขาย)** หรือ **กลุ่ม C (ชุมชน)** / **กลุ่ม S (ค่าขนส่ง)** — สลับได้อิสระ (หรือ P3 import อัตโนมัติ ทำหลังมีโดเมนจริง)
-- **⚙️ Feature flag:** `FLAGS.REVIEWS = false` (T2 เปิดเมื่อพร้อม) · T3 verify ไม่มี flag · `FLAGS.PRICES = false` (หน้า public P2 สร้างเสร็จ+เทสผ่าน — เปิด `true` เมื่อกรอกราคา ~2 วันแล้ว จะได้มีลูกศรเปลี่ยนแปลง · admin CMS P1 เปิดใช้ได้เลยไม่ผูก flag) · `FLAGS.FARM_PROFILE = false` (**U1+U2 เสร็จ+เทสผ่านครบ** — เปิด `true` ได้เลยตอน deploy **หลังรัน migration `add_farm_profile` บน prod** ไม่งั้นหน้า `/sellers/[id]` จะ error)
-- **⚠️ migration ค้างสำหรับ prod (6 ตัว):** `add_shop_directory` · `add_contact_reveal` · `add_seller_reviews` · `add_verification_request` · `add_price_tables` · `add_farm_profile` — ตอน deploy: `npx dotenv-cli -e .env.production-db -- npx prisma migrate deploy` แล้วรัน `npx dotenv-cli -e .env.production-db -- npx tsx scripts/seed-price-items.ts` (seed 26 รายการราคา)
+- **Milestone ปัจจุบัน:** Phase 2 — **กลุ่ม T (Trust)** + **กลุ่ม P (ราคากลาง P1+P2)** + **กลุ่ม U (โปรไฟล์เกษตรกร U1+U2) เสร็จครบ ✅** + **กลุ่ม B — B1 (MatchPost schema + CRUD + moderation) เสร็จ ✅** · ก้อนถัดไปตามแผน = **B2 (หน้ากระดาน public + SEO + cross-link)** — หรือ **กลุ่ม C (ชุมชน)** / **กลุ่ม S (ค่าขนส่ง)** สลับได้อิสระ
+- **⚙️ Feature flag:** `FLAGS.REVIEWS = false` (T2 เปิดเมื่อพร้อม) · T3 verify ไม่มี flag · `FLAGS.PRICES = false` (หน้า public P2 สร้างเสร็จ+เทสผ่าน — เปิด `true` เมื่อกรอกราคา ~2 วันแล้ว จะได้มีลูกศรเปลี่ยนแปลง · admin CMS P1 เปิดใช้ได้เลยไม่ผูก flag) · `FLAGS.FARM_PROFILE = false` (**U1+U2 เสร็จ+เทสผ่านครบ** — เปิด `true` ได้เลยตอน deploy **หลังรัน migration `add_farm_profile` บน prod** ไม่งั้นหน้า `/sellers/[id]` จะ error) · `FLAGS.MATCHING = false` (**B1 เสร็จ+เทสผ่าน** — เปิด `true` เมื่อ B2 หน้ากระดาน public เสร็จ + migrate prod แล้ว)
+- **⚠️ migration ค้างสำหรับ prod (7 ตัว):** `add_shop_directory` · `add_contact_reveal` · `add_seller_reviews` · `add_verification_request` · `add_price_tables` · `add_farm_profile` · `add_match_post` — ตอน deploy: `npx dotenv-cli -e .env.production-db -- npx prisma migrate deploy` แล้วรัน `npx dotenv-cli -e .env.production-db -- npx tsx scripts/seed-price-items.ts` (seed 26 รายการราคา)
 - **โดเมนจริง:** taladkaset.com (ผู้ใช้แจ้ง 2026-07-12) — ตั้ง `NEXT_PUBLIC_SITE_URL=https://taladkaset.com` ตอน deploy; แบรนด์ในโค้ดยังเป็น "KasetMarket" ถ้าจะรีแบรนด์ต้องสั่งเป็นงานแยก
 - **อัปเดตล่าสุด:** 2026-07-13
+
+---
+
+## Phase 2 — B1: Match post schema + CRUD + moderation ✅ (2026-07-13)
+
+> สเปค PLAN-PHASE2.md §5 กลุ่ม B (B1) — กระดานจับคู่ซื้อขาย (reuse ระบบประกาศทั้งชุด) · หลัง `FLAGS.MATCHING` (ปิดไว้ เปิดเมื่อ B2 หน้ากระดาน public เสร็จ)
+
+### สิ่งที่ทำ
+
+- **Schema:** `MatchPost` (slug ไทย, type SUPPLY/DEMAND, title/detail, category/province/district reuse, quantity free-text, targetDate?, priceNote?, contact, status, rejectReason, featured, views, expiresAt +30วัน) + enums `MatchPostType`/`MatchPostStatus` (PENDING/ACTIVE/MATCHED/EXPIRED/REJECTED) + back-relation `User.matchPosts` · migration `20260713010000_add_match_post` (**apply dev DB แล้ว — prod ยังไม่**)
+- **`config/matchTypes.ts`:** SUPPLY/DEMAND + label/formLabel (ภาษาคน)/boardLabel/dateLabel/icon · helper `matchTypeMeta`
+- **`features/matching/`:** schemas (zod + `matchPostFormDataToObject` — targetDate ว่าง→undefined), actions (**create/update/markMatched/renew/delete** เจ้าของ + **approve/reject** แอดมิน — กติกาเดิม: verified→ACTIVE/ไม่→PENDING, ban check, บังคับติดต่อ≥1, rate limit 3/วัน, REJECTED→แก้แล้วกลับ PENDING, slug retry), queries (getMyMatchPosts, getMyMatchPostForEdit ownership, getPendingMatchPosts, getPendingMatchPostCount), components (form/row-actions/status-badge/moderation-actions)
+- **Dashboard:** `/dashboard/matching` (list จัดการ), `/new`, `/[id]/edit` — ทั้งหมดหลัง `FLAGS.MATCHING` (notFound เมื่อปิด) + การ์ดในแดชบอร์ด
+- **Admin:** รวมเข้า `/admin/moderation` เดิม (section แยกใต้คิวประกาศ — แตะโค้ดเดิมน้อยสุด) + approve/reject พร้อมเหตุผล + การ์ด "โพสจับคู่รออนุมัติ" ในภาพรวม (ทั้งหมดโผล่เฉพาะ flag เปิด)
+
+### ทดสอบแล้ว (integration 14/14 + HTTP E2E 13/13 ผ่าน server action จริง บน `next start` flag=ON + dev DB — เทสเสร็จปิด flag)
+
+- [x] **HTTP (action จริง):** admin verified โพส **4 ครั้ง → 3 ACTIVE + ครั้งที่ 4 โดน rate limit** (สเปคเกณฑ์) · โพสครบ 2 type · slug ไม่ซ้ำ · seller ไม่ verified → **PENDING**
+- [x] **flow moderation จริง:** โพส PENDING โผล่ใน `/admin/moderation` → แอดมินกดอนุมัติ (server action จริง) → **ACTIVE**
+- [x] **"จับคู่แล้ว" (markMatched) จริง** → MATCHED → **หายจากบอร์ด** (query status ACTIVE ไม่รวม)
+- [x] **Integration:** zod validation (ไม่มีช่องทางติดต่อ/หมวดปลอม → ล้มเหลว, targetDate ว่าง→undefined, coerce Date) · queries คืนเฉพาะ PENDING + ownership guard · cascade ลบ user → โพสหาย
+- [x] `npm run build` ผ่านทั้ง flag on/off — ข้อมูล+สคริปต์ทดสอบล้างหมด (MatchPost 0 แถว)
+
+### งานที่เหลือ
+
+- [ ] **B2 ถัดไป:** URL `/จับคู่ซื้อขาย`→`/matching` + `/[slug]` · บอร์ด 2 แท็บ + filter + การ์ด + SafetyNotice/ContactButtons/ContactReveal · cross-link สองฝั่ง + nav/หน้าแรก + sitemap + ISR · แล้วเปิด `FLAGS.MATCHING`
+- [ ] ตอน deploy prod: migration `add_match_post`
 
 ---
 

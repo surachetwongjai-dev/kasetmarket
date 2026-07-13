@@ -81,6 +81,17 @@ export default async function DashboardPage() {
             </span>
           </Link>
         )}
+        {FLAGS.MATCHING && (
+          <Link
+            href="/dashboard/matching"
+            className="flex min-h-24 flex-col justify-center rounded-xl border border-border bg-card p-5 transition-colors hover:bg-muted"
+          >
+            <span className="text-lg font-semibold">กระดานจับคู่ซื้อขาย</span>
+            <span className="mt-1 text-sm text-muted-foreground">
+              ประกาศผลผลิตล่วงหน้า หรือประกาศรับซื้อ
+            </span>
+          </Link>
+        )}
       </div>
 
       <div className="mt-4">

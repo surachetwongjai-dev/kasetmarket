@@ -8,17 +8,20 @@ import {
   getOpenReviewReportCount,
   getOpenVerificationCount,
 } from "@/features/trust";
+import { getPendingMatchPostCount } from "@/features/matching";
 
 export const metadata: Metadata = {
   title: "ผู้ดูแลระบบ",
 };
 
 export default async function AdminPage() {
-  const [stats, openVerifications, openReviewReports] = await Promise.all([
-    getAdminStats(),
-    getOpenVerificationCount(),
-    FLAGS.REVIEWS ? getOpenReviewReportCount() : Promise.resolve(0),
-  ]);
+  const [stats, openVerifications, openReviewReports, pendingMatchPosts] =
+    await Promise.all([
+      getAdminStats(),
+      getOpenVerificationCount(),
+      FLAGS.REVIEWS ? getOpenReviewReportCount() : Promise.resolve(0),
+      FLAGS.MATCHING ? getPendingMatchPostCount() : Promise.resolve(0),
+    ]);
 
   const cards = [
     {
@@ -46,6 +49,16 @@ export default async function AdminPage() {
             value: openReviewReports,
             href: "/admin/reviews",
             urgent: openReviewReports > 0,
+          },
+        ]
+      : []),
+    ...(FLAGS.MATCHING
+      ? [
+          {
+            label: "โพสจับคู่รออนุมัติ",
+            value: pendingMatchPosts,
+            href: "/admin/moderation",
+            urgent: pendingMatchPosts > 0,
           },
         ]
       : []),
