@@ -10,6 +10,30 @@
 
 ---
 
+## แก้บั๊กชุมชน: ตอบ/ตั้งกระทู้แล้วเด้ง "เกิดข้อผิดพลาด" ทั้งที่สำเร็จ ✅ (2026-07-14)
+
+> อาการ: พิมพ์ตอบ→กดตอบ→error boundary (`app/error.tsx`) เด้ง แต่ refresh แล้วคำตอบขึ้นจริง (write สำเร็จ error มาทีหลัง)
+
+### ต้นเหตุ
+
+- **`useActionState` + server action `redirect()` ไป URL ไทยที่ rewrite** = พัง (RSC navigation หลัง action ไป path encode ไทย/rewrite → error boundary) — reply write commit ก่อน redirect จึงสำเร็จแต่เด้ง error
+- ยืนยันจากของที่ **ใช้ได้อยู่แล้ว** ในฟีเจอร์เดียวกัน: `updateReplyAction`/`reportForumAction` (return state ไม่ redirect) และ plain form action (ปุ่มลบ/ปักหมุด = POST-redirect ปกติ) ไม่มีปัญหา · การคลิกลิงก์เปิดกระทู้ (client nav ไป URL ไทย) ก็ทำงานดี → เสียเฉพาะ redirect ที่ออกจาก server action ผ่าน useActionState
+
+### สิ่งที่แก้ (features/community)
+
+- **`createReplyAction`:** เอา `redirect()` ออก → `return { success: true }` · **ReplyForm** โชว์ "✅ ตอบกระทู้สำเร็จ" + `router.refresh()` ดึงคำตอบใหม่ขึ้นมา (แพทเทิร์นเดียวกับ updateReplyAction) — ตรงกับที่ผู้ใช้อยากได้ (ข้อความสำเร็จแทน error)
+- **`createThreadAction` + `updateThreadAction`:** เอา `redirect()` ออก → `return { slug }` · **ThreadForm** `useEffect` → `router.push(threadPath(slug))` นำทางฝั่ง client (กันบั๊กเดียวกันเชิงรุกก่อน launch — ตั้ง/แก้กระทู้ก็ใช้ useActionState+redirect ไทยเหมือนกัน)
+- `ThreadFormState` เพิ่ม `slug?`, `ReplyFormState` เพิ่ม `success?` · ลบ import `threadPath` ที่ไม่ใช้ใน actions.ts
+
+### ทดสอบแล้ว
+
+- [x] `npm run build` ผ่าน (compiled ok, types ผ่าน)
+- [x] `next start`: หน้าแรก/hub/กระทู้รายตัว/ตั้งกระทู้ 200 ทั้งหมด ไม่มี runtime error ใน log
+- [x] เหตุผลเชิงโครงสร้าง: ตัด `redirect()` (จุดเดียวที่ throw หลัง write สำเร็จ) → return object + revalidatePath (ไม่ throw) = ไปถึง error boundary ไม่ได้อีก
+- [ ] **(ฝั่งคุณ) เทสจริงบน prod หลัง deploy:** ตอบกระทู้ → ต้องขึ้น "✅ ตอบกระทู้สำเร็จ" + คำตอบโผล่ทันที (ไม่มี error) · ตั้งกระทู้ใหม่ → เด้งไปหน้ากระทู้ที่เพิ่งตั้ง
+
+---
+
 ## เปิดใช้งานระบบชุมชน (Community go-live) ✅ (2026-07-14)
 
 > ทำต่อจาก C1+C2+C3 ที่สร้างเสร็จแล้ว — เหลือแค่ seed กระทู้ตั้งต้น + เปิด flag (prod migrate `add_community`/`add_forum_report` ครบตั้งแต่ 2026-07-13)

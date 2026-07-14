@@ -19,13 +19,14 @@ import {
   REPLY_DAILY_LIMIT,
   EDIT_WINDOW_HOURS,
 } from "./schemas";
-import { threadPath } from "./paths";
-
 export type ThreadFormState = {
   error?: string;
   fieldErrors?: Record<string, string[] | undefined>;
+  /** slug ของกระทู้ที่บันทึกสำเร็จ — ให้ฟอร์ม (client) นำทางเอง แทน server redirect
+   *  ที่ทำ error boundary เด้งเมื่อ useActionState redirect ไป URL ไทยที่ rewrite */
+  slug?: string;
 };
-export type ReplyFormState = { error?: string };
+export type ReplyFormState = { error?: string; success?: boolean };
 
 function startOfBangkokDay(): Date {
   const bkk = new Date(Date.now() + 7 * 3600 * 1000);
@@ -100,7 +101,7 @@ export async function createThreadAction(
   }
 
   revalidatePath("/community");
-  redirect(encodeURI(threadPath(slug))); // Location header ต้องเป็น ASCII (CLAUDE.md D4)
+  return { slug }; // client นำทางไป threadPath(slug) เอง (เลี่ยง server redirect ที่พังกับ useActionState)
 }
 
 /** ตอบกระทู้ */
@@ -144,9 +145,12 @@ export async function createReplyAction(
     }),
   ]);
 
+  // ไม่ redirect ไป URL ไทย (RSC navigation จาก useActionState ไป path ที่ rewrite
+  // + encode ไทย ทำ error boundary เด้งทั้งที่ตอบสำเร็จแล้ว) — คืน success ให้ฟอร์ม
+  // refresh ดึงคำตอบใหม่ขึ้นมาแทน (แพทเทิร์นเดียวกับ updateReplyAction ที่ใช้ได้ดีอยู่)
   revalidatePath(`/community/${thread.slug}`);
   revalidatePath("/community");
-  redirect(encodeURI(threadPath(thread.slug)));
+  return { success: true };
 }
 
 // ---------- C2: รายงาน + แก้ไข/ลบเอง ----------
@@ -236,7 +240,7 @@ export async function updateThreadAction(
 
   revalidatePath(`/community/${thread.slug}`);
   revalidatePath("/community");
-  redirect(encodeURI(threadPath(thread.slug)));
+  return { slug: thread.slug };
 }
 
 /** ลบกระทู้ของตัวเอง (หรือแอดมิน) */

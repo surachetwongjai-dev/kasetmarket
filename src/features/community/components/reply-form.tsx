@@ -3,8 +3,9 @@
 // ฟอร์มตอบกระทู้ (C1) + ReplyGate ที่เช็ค session ฝั่ง client
 // (หน้ากระทู้เป็น ISR — ต้องเช็คล็อกอินฝั่ง client เพื่อคงแคช)
 
-import { useActionState } from "react";
+import { useActionState, useEffect, useRef } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { createReplyAction, type ReplyFormState } from "../actions";
 import { MAX_REPLY_BODY } from "../schemas";
@@ -45,13 +46,23 @@ export function ReplyGate({
 }
 
 export function ReplyForm({ threadId }: { threadId: string }) {
+  const router = useRouter();
+  const formRef = useRef<HTMLFormElement>(null);
   const [state, formAction, pending] = useActionState(
     createReplyAction,
     initialState,
   );
 
+  // ตอบสำเร็จ → ล้างช่องพิมพ์ + refresh ดึงคำตอบใหม่ขึ้นมาแสดง (ไม่ redirect)
+  useEffect(() => {
+    if (state.success) {
+      formRef.current?.reset();
+      router.refresh();
+    }
+  }, [state, router]);
+
   return (
-    <form action={formAction} className="flex flex-col gap-2">
+    <form ref={formRef} action={formAction} className="flex flex-col gap-2">
       <input type="hidden" name="threadId" value={threadId} />
       <textarea
         name="body"
@@ -63,6 +74,9 @@ export function ReplyForm({ threadId }: { threadId: string }) {
       />
       {state.error && (
         <p className="text-sm text-destructive">{state.error}</p>
+      )}
+      {state.success && (
+        <p className="text-sm font-medium text-primary">✅ ตอบกระทู้สำเร็จ</p>
       )}
       <button
         type="submit"

@@ -2,12 +2,14 @@
 
 // ฟอร์มตั้งกระทู้ (C1) — ล็อกอินแล้วเท่านั้น (หน้าเช็ค session ก่อน render)
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FORUM_CATEGORIES } from "@/config/forumCategories";
 import { MAX_THREAD_BODY, MAX_THREAD_TITLE } from "../schemas";
 import type { ThreadFormState } from "../actions";
+import { threadPath } from "../paths";
 import {
   ImageUploader,
   type UploadedImage,
@@ -36,8 +38,14 @@ export function ThreadForm({
   defaults?: Partial<ThreadFormDefaults>;
   submitLabel?: string;
 }) {
+  const router = useRouter();
   const [state, formAction, pending] = useActionState(action, initialState);
   const [images, setImages] = useState<UploadedImage[]>(defaults?.images ?? []);
+
+  // บันทึกสำเร็จ → นำทางไปหน้ากระทู้ฝั่ง client (เลี่ยง server redirect ที่พังกับ useActionState + URL ไทย)
+  useEffect(() => {
+    if (state.slug) router.push(threadPath(state.slug));
+  }, [state, router]);
 
   return (
     <form action={formAction} className="flex flex-col gap-5">
