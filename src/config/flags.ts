@@ -17,8 +17,8 @@ export const FLAGS = {
   FARM_PROFILE: false,
   /** กระดานจับคู่ซื้อขาย Demand & Supply (กลุ่ม B) — B1+B2 เสร็จ+เทสผ่านครบ; เปิด true ได้เลยตอน deploy หลังรัน migration add_match_post บน prod */
   MATCHING: false,
-  /** ชุมชนพูดคุยปัญหาเกษตร (กลุ่ม C) — C1+C2+C3 เสร็จ+เทสผ่านครบ; เปิด true เมื่อพร้อมดูแล/ตอบสม่ำเสมอ + seed กระทู้ 10-15 + migrate prod (add_community, add_forum_report) */
-  COMMUNITY: false,
+  /** ชุมชนพูดคุยปัญหาเกษตร (กลุ่ม C) — C1+C2+C3 เสร็จ+เทสผ่านครบ; prod migrate ครบแล้ว (add_community, add_forum_report) + seed กระทู้ตั้งต้น 12 (scripts/seed-community.ts) → เปิด true (2026-07-14) */
+  COMMUNITY: true,
   /** เช็คค่าขนส่งทุกค่าย (กลุ่ม S) — S1 เสร็จ+เทสผ่าน; หน้า utility ล้วน ไม่มี migration เปิด true ได้เลยตอน deploy (ทบทวนเรทใน config เดือนละครั้ง) */
   SHIPPING_RATES: false,
 } as const;

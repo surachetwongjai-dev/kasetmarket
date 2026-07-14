@@ -3,10 +3,38 @@
 > อัปเดตหลังจบทุก milestone — session ใหม่อ่านไฟล์นี้คู่กับ CLAUDE.md + PLAN.md
 
 - **Milestone ปัจจุบัน:** Phase 2 — **กลุ่ม T** + **P (P1+P2)** + **U (U1+U2)** + **B (B1+B2)** + **C (ชุมชน C1+C2+C3)** + **S (ค่าขนส่ง S1)** เสร็จครบ ✅ — **จบ Phase 2 ทั้งหมด** (S2/B3 = Phase 2.5–3)
-- **⚙️ Feature flag:** `FLAGS.REVIEWS = false` (T2 เปิดเมื่อพร้อม) · T3 verify ไม่มี flag · `FLAGS.PRICES = false` (P2 เสร็จ+เทส — เปิดเมื่อกรอกราคา ~2 วัน · admin P1 ใช้ได้เลย) · `FLAGS.FARM_PROFILE = false` (**U1+U2 เสร็จ** — เปิดได้หลัง migrate `add_farm_profile`) · `FLAGS.MATCHING = false` (**B1+B2 เสร็จ** — เปิดได้หลัง migrate `add_match_post`) · `FLAGS.COMMUNITY = false` (**C1+C2+C3 เสร็จ** — เปิดเมื่อพร้อมดูแล + seed กระทู้ 10-15 + migrate prod) · `FLAGS.SHIPPING_RATES = false` (**S1 เสร็จ+เทสผ่าน** — หน้า utility ล้วน **ไม่มี migration** เปิด true ได้เลยตอน deploy)
+- **⚙️ Feature flag:** `FLAGS.REVIEWS = false` (T2 เปิดเมื่อพร้อม) · T3 verify ไม่มี flag · `FLAGS.PRICES = false` (P2 เสร็จ+เทส — เปิดเมื่อกรอกราคา ~2 วัน · admin P1 ใช้ได้เลย) · `FLAGS.FARM_PROFILE = false` (**U1+U2 เสร็จ** — เปิดได้หลัง migrate `add_farm_profile`) · `FLAGS.MATCHING = false` (**B1+B2 เสร็จ** — เปิดได้หลัง migrate `add_match_post`) · `FLAGS.COMMUNITY = true` ✅ (**เปิดใช้งานแล้ว 2026-07-14** — prod migrate ครบ + seed กระทู้ตั้งต้น 12 ผ่าน `scripts/seed-community.ts`; **ต้องรัน seed กับ prod DB ก่อน/ทันทีหลัง deploy** ไม่งั้น hub ว่าง — ดู milestone ล่างสุด) · `FLAGS.SHIPPING_RATES = false` (**S1 เสร็จ+เทสผ่าน** — หน้า utility ล้วน **ไม่มี migration** เปิด true ได้เลยตอน deploy)
 - **✅ migration prod ครบ 13/13 แล้ว (deploy 2026-07-13):** ชุดสุดท้าย `add_farm_profile`/`add_match_post`/`add_community`/`add_forum_report` apply สำเร็จ ("All migrations have been successfully applied") — schema prod ตรงกับโค้ดครบ. migration ใหม่ในอนาคตใช้: `npx --yes dotenv-cli -e .env.production-db -- npx prisma migrate deploy` · **ยังไม่ได้ seed ราคา** — ถ้าจะเปิด PRICES ต้องรัน `npx --yes dotenv-cli -e .env.production-db -- npx tsx scripts/seed-price-items.ts` (26 รายการ) ก่อน
 - **โดเมนจริง:** taladkaset.com (ผู้ใช้แจ้ง 2026-07-12) — ตั้ง `NEXT_PUBLIC_SITE_URL=https://taladkaset.com` ตอน deploy; แบรนด์ในโค้ดยังเป็น "KasetMarket" ถ้าจะรีแบรนด์ต้องสั่งเป็นงานแยก
-- **อัปเดตล่าสุด:** 2026-07-13
+- **อัปเดตล่าสุด:** 2026-07-14
+
+---
+
+## เปิดใช้งานระบบชุมชน (Community go-live) ✅ (2026-07-14)
+
+> ทำต่อจาก C1+C2+C3 ที่สร้างเสร็จแล้ว — เหลือแค่ seed กระทู้ตั้งต้น + เปิด flag (prod migrate `add_community`/`add_forum_report` ครบตั้งแต่ 2026-07-13)
+
+### สิ่งที่ทำ
+
+- **`scripts/seed-community.ts`** (ใหม่): กระทู้ตั้งต้น **12 กระทู้** หัวข้อชวนคุย/คำถามเปิด ครบ 8 หมวด (ข้าว/พืชไร่/ผัก-ผลไม้/ปศุสัตว์-ประมง/ปุ๋ย-ยา-โรคพืช/เครื่องจักร/ราคา/ทั่วไป) โพสในนามแอดมิน (เจ้าของช่อง) — **ไม่มีบัญชีปลอม/reply ปลอม** · pinned 2 กระทู้ (ต้อนรับ + แนะนำตัว) · จัด `createdAt/lastReplyAt` ไล่ 0–12 วันให้ดูเป็นธรรมชาติ
+  - **idempotent:** slug คงที่ (ไม่มี suffix สุ่ม, ต่อท้าย `-c-<key>`) upsert รันซ้ำได้ไม่ duplicate · รันซ้ำ**อัปเดตเฉพาะเนื้อหา ไม่แตะ** pinned/views/repliesCount/lastReplyAt/hidden (คงกิจกรรมจริงหลังผู้ใช้เข้ามาโพส/ตอบ)
+- **`FLAGS.COMMUNITY = true`** — nav "ชุมชน", หน้า `/ชุมชน` hub + กระทู้รายตัว + ตั้งกระทู้, section "จากชุมชน" หน้าแรก, ลิงก์จากบทความ, sitemap, แท็บ admin ชุมชน โผล่พร้อมกัน
+
+### ทดสอบแล้ว (`next start` prod build + dev DB, seed 12 กระทู้)
+
+- [x] seed รันซ้ำ idempotent (สร้าง 12 → รันซ้ำ 0 ใหม่/12 อัปเดต, คง 12 กระทู้)
+- [x] `npm run build` ผ่าน (flag on)
+- [x] hub `/ชุมชน` 200 + **แสดงครบ 12/12 หัวข้อ** + pinned ขึ้นบน · encoded URL (Googlebot form `%E0%B8...`) 200 · `/community` → 308 ไป URL ไทย
+- [x] หน้ากระทู้รายตัว 200 + **JSON-LD `DiscussionForumPosting`** + reply UI + breadcrumb
+- [x] หน้าแรกมี section "จากชุมชน" · sitemap.xml รวมหน้าชุมชน · nav มีลิงก์ "ชุมชน"
+
+### งานที่เหลือ (ฝั่งคุณ — ตอน deploy prod)
+
+- [ ] **รัน seed กับ prod DB** (ก่อน/ทันทีหลัง deploy ไม่งั้น hub ว่าง):
+      `npx --yes dotenv-cli -e .env.production-db -- npx tsx scripts/seed-community.ts`
+      (prod DB ต้องมี user ADMIN อยู่แล้ว — สคริปต์หาเองจาก role ADMIN ที่เก่าสุด)
+- [ ] deploy (push main → Vercel) พร้อม flag ที่เปิดแล้ว
+- [ ] เริ่มตอบกระทู้/ดูแลชุมชนสม่ำเสมอช่วงแรก ≥2 สัปดาห์ (ตามแผนเดิม)
 
 ---
 
