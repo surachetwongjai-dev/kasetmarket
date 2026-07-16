@@ -62,7 +62,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
       title,
       description: shop.description.slice(0, 160),
       type: "website",
-      siteName: "KasetMarket",
+      siteName: "TaladKaset",
       images: shop.images[0] ? [{ url: shop.images[0].url }] : undefined,
     },
   };

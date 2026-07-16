@@ -1,4 +1,7 @@
-# KasetMarket — แพลตฟอร์มชุมชน + ประกาศขายสินค้าเกษตร
+# TaladKaset — แพลตฟอร์มชุมชน + ประกาศขายสินค้าเกษตร
+
+> **ชื่อแบรนด์ = "TaladKaset"** (โดเมน taladkaset.com) — เดิมชื่อ "KasetMarket" รีแบรนด์แล้ว 2026-07-16
+> ห้าม hardcode ชื่อแบรนด์ในหน้าใหม่ → `import { SITE_NAME } from "@/config/site"`
 
 > CLAUDE.md — Project memory สำหรับ Claude Code
 > อ่านไฟล์นี้ก่อนเริ่มงานทุกครั้ง อัปเดต STATUS.md หลังจบทุก milestone
@@ -285,6 +288,7 @@ npx prisma migrate dev --name <ชื่อ>
 npx prisma studio    # ดูข้อมูล
 npx tsx scripts/seed-shops.ts <ไฟล์.csv>   # seed ร้านค้า directory จาก CSV (รันซ้ำได้ ไม่ duplicate)
 npx tsx scripts/seed-price-items.ts        # seed 26 รายการราคากลาง (upsert ตาม slug, รันซ้ำได้ ไม่แตะราคาเดิม)
+npx tsx scripts/rebrand-taladkaset.ts      # แก้ชื่อแบรนด์เก่าที่ค้างใน DB (ชื่อ user/บทความ/ประกาศ) — ใส่ --dry ดูก่อน
 ```
 
 **⚠️ env files:** `.env` = dev · `.env.production-db` = DB production (ใช้กับสคริปต์ผ่าน `dotenv-cli` เท่านั้น)

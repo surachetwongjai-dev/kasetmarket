@@ -37,14 +37,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const description = listing.description.slice(0, 160);
 
   return {
-    title, // layout เติม "| KasetMarket" ให้จาก title.template
+    title, // layout เติม "| TaladKaset" ให้จาก title.template
     description,
     alternates: { canonical: `/listings/${slug}` },
     openGraph: {
       title,
       description,
       type: "website",
-      siteName: "KasetMarket",
+      siteName: "TaladKaset",
       images: listing.images[0] ? [{ url: listing.images[0].url }] : undefined,
     },
   };

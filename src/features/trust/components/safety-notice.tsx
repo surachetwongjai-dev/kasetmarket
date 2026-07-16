@@ -10,7 +10,7 @@ export function SafetyNotice({ variant = "banner" }: { variant?: Variant }) {
     // ข้อความสั้น บังคับเห็นก่อนเบอร์โผล่ (แทรกใน ContactButtons)
     return (
       <p className="rounded-lg border border-accent-gold/40 bg-accent-gold/10 p-2.5 text-xs leading-relaxed text-foreground">
-        ⚠️ <strong>taladkaset เป็นตัวกลางเท่านั้น</strong> — ตกลงราคา/ค่าขนส่งกับผู้ขายเอง{" "}
+        ⚠️ <strong>TaladKaset เป็นตัวกลางเท่านั้น</strong> — ตกลงราคา/ค่าขนส่งกับผู้ขายเอง{" "}
         <strong>อย่าโอนเงินหรือมัดจำ</strong>จนกว่าจะเห็นสินค้าจริงหรือมั่นใจในตัวผู้ขาย
       </p>
     );
@@ -21,7 +21,7 @@ export function SafetyNotice({ variant = "banner" }: { variant?: Variant }) {
     <div className="rounded-xl border border-accent-gold/40 bg-accent-gold/10 p-3 text-sm leading-relaxed text-foreground">
       <p>
         <span aria-hidden>🛡️ </span>
-        <strong>taladkaset เป็นตัวกลางให้ผู้ซื้อ-ผู้ขายเจอกันเท่านั้น</strong>{" "}
+        <strong>TaladKaset เป็นตัวกลางให้ผู้ซื้อ-ผู้ขายเจอกันเท่านั้น</strong>{" "}
         ตกลงราคา/ขนส่งกันเอง — อย่าโอนเงินมัดจำจนกว่าจะเห็นสินค้าหรือมั่นใจในตัวผู้ขาย{" "}
         <Link
           href="/safety"

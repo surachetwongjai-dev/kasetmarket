@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "นโยบายความเป็นส่วนตัว",
   description:
-    "นโยบายความเป็นส่วนตัวของ KasetMarket ว่าด้วยการเก็บ ใช้ และคุ้มครองข้อมูลส่วนบุคคลตาม พ.ร.บ. คุ้มครองข้อมูลส่วนบุคคล (PDPA)",
+    "นโยบายความเป็นส่วนตัวของ TaladKaset ว่าด้วยการเก็บ ใช้ และคุ้มครองข้อมูลส่วนบุคคลตาม พ.ร.บ. คุ้มครองข้อมูลส่วนบุคคล (PDPA)",
   alternates: { canonical: "/privacy" },
 };
 
@@ -19,7 +19,7 @@ export default function PrivacyPage() {
       </p>
       <div className="article-prose mt-4">
         <p>
-          KasetMarket (&ldquo;เรา&rdquo;) เคารพความเป็นส่วนตัวของผู้ใช้งาน
+          TaladKaset (&ldquo;เรา&rdquo;) เคารพความเป็นส่วนตัวของผู้ใช้งาน
           และปฏิบัติตามพระราชบัญญัติคุ้มครองข้อมูลส่วนบุคคล พ.ศ. 2562 (PDPA)
           นโยบายนี้อธิบายว่าเราเก็บ ใช้ และคุ้มครองข้อมูลของคุณอย่างไร
         </p>

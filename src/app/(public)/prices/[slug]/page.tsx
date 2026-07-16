@@ -76,7 +76,7 @@ export default async function PriceDetailPage({ params }: Props) {
     "@context": "https://schema.org",
     "@type": "Dataset",
     name: `ราคา${item.name} ย้อนหลัง 30 วัน`,
-    description: `ราคากลาง${item.name} (${item.unit}) รายวันบน taladkaset`,
+    description: `ราคากลาง${item.name} (${item.unit}) รายวันบน TaladKaset`,
     url: priceAbsoluteUrl(pricePath(item.slug)),
     temporalCoverage: `${oldest.date.toISOString().slice(0, 10)}/${latest.date.toISOString().slice(0, 10)}`,
     ...(item.sourceName

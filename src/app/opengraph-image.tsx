@@ -2,7 +2,7 @@
 // (หน้าประกาศ/บทความตั้ง images เองใน generateMetadata → ทับรูปนี้)
 import { ImageResponse } from "next/og";
 
-export const alt = "KasetMarket — ตลาดกลางซื้อขายสินค้าเกษตร ลงประกาศฟรี";
+export const alt = "TaladKaset — ตลาดกลางซื้อขายสินค้าเกษตร ลงประกาศฟรี";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -42,8 +42,8 @@ export default async function OpengraphImage() {
       >
         {/* wordmark (Latin — เรนเดอร์ได้เสมอ) */}
         <div style={{ display: "flex", fontSize: 104, fontWeight: 700, letterSpacing: -2 }}>
-          <span>Kaset</span>
-          <span style={{ color: "#E8A317" }}>Market</span>
+          <span>Talad</span>
+          <span style={{ color: "#E8A317" }}>Kaset</span>
         </div>
 
         {/* tagline ไทย — แสดงเฉพาะเมื่อโหลดฟอนต์สำเร็จ (กันกล่อง) */}

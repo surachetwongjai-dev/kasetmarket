@@ -37,8 +37,8 @@ export const metadata: Metadata = {
   // metadataBase ทำให้ canonical + og:image แบบ relative resolve เป็น absolute URL ได้
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "KasetMarket — ตลาดกลางซื้อขายสินค้าเกษตร",
-    template: "%s | KasetMarket",
+    default: `${SITE_NAME} — ตลาดกลางซื้อขายสินค้าเกษตร`,
+    template: `%s | ${SITE_NAME}`,
   },
   description:
     "แหล่งซื้อขายสินค้าเกษตรโดยตรงจากเกษตรกร ข้าว ผัก ผลไม้ ต้นกล้า ปุ๋ย เครื่องจักรเกษตร ลงประกาศฟรี ติดต่อผู้ขายตรงทางโทรหรือ LINE",

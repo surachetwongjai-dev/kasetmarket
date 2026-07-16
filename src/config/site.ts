@@ -5,7 +5,7 @@ export const SITE_URL = (
   process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"
 ).replace(/\/$/, "");
 
-export const SITE_NAME = "KasetMarket";
+export const SITE_NAME = "TaladKaset";
 
 export const SITE_DESCRIPTION =
   "ตลาดกลางซื้อขายสินค้าเกษตร ลงประกาศฟรี ผู้ซื้อติดต่อผู้ขายโดยตรงทางโทรศัพท์หรือ LINE พร้อมคลังบทความความรู้เกษตร";

@@ -8,7 +8,7 @@ import { submitShopAction } from "@/features/directory/actions";
 export const metadata: Metadata = {
   title: "ลงทะเบียนร้านค้าเกษตร (ฟรี)",
   description:
-    "ลงทะเบียนร้านค้า-ตัวแทนจำหน่ายสินค้าเกษตรกับ KasetMarket ฟรี ให้ลูกค้าในพื้นที่ค้นหาร้านของคุณเจอ พร้อมเบอร์โทรและแผนที่",
+    "ลงทะเบียนร้านค้า-ตัวแทนจำหน่ายสินค้าเกษตรกับ TaladKaset ฟรี ให้ลูกค้าในพื้นที่ค้นหาร้านของคุณเจอ พร้อมเบอร์โทรและแผนที่",
   alternates: { canonical: "/ลงทะเบียนร้านค้า" },
 };
 

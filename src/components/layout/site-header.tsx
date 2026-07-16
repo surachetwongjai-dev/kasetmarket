@@ -21,7 +21,7 @@ export function SiteHeader() {
         >
           <span aria-hidden>🌾</span>
           <span>
-            Kaset<span className="text-primary">Market</span>
+            Talad<span className="text-primary">Kaset</span>
           </span>
         </Link>
 

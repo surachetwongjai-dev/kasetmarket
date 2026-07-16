@@ -40,7 +40,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       title: article.title,
       description,
       type: "article",
-      siteName: "KasetMarket",
+      siteName: "TaladKaset",
       publishedTime: article.publishedAt?.toISOString(),
       images: article.coverUrl ? [{ url: article.coverUrl }] : undefined,
     },
@@ -68,8 +68,8 @@ export default async function ArticleDetailPage({ params }: Props) {
     datePublished: article.publishedAt?.toISOString(),
     dateModified: article.publishedAt?.toISOString(),
     articleSection: article.category,
-    author: { "@type": "Organization", name: "KasetMarket" },
-    publisher: { "@type": "Organization", name: "KasetMarket" },
+    author: { "@type": "Organization", name: "TaladKaset" },
+    publisher: { "@type": "Organization", name: "TaladKaset" },
   };
 
   // VideoObject — โอกาสขึ้น video rich result ใน Google (ต้องมี uploadDate)

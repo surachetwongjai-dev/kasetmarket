@@ -17,7 +17,7 @@ import { DIRECTORY_BASE, provincePath } from "@/features/directory/paths";
 import { getShopCategoryLabel } from "@/config/shopCategories";
 
 export const metadata: Metadata = {
-  title: "ร้านค้า-ตัวแทนจำหน่ายเกษตรทั่วไทย", // layout เติม "| KasetMarket" ให้
+  title: "ร้านค้า-ตัวแทนจำหน่ายเกษตรทั่วไทย", // layout เติม "| TaladKaset" ให้
   description:
     "รวมร้านขายปุ๋ย เมล็ดพันธุ์ เครื่องจักรกลเกษตร และจุดรับซื้อผลผลิตทั่วไทย พร้อมเบอร์โทร ที่อยู่ เวลาเปิด ค้นหาร้านเกษตรใกล้บ้านคุณ",
   // canonical ชี้ base เสมอ — รวม filter param ให้เป็นหน้าเดียว กัน duplicate content

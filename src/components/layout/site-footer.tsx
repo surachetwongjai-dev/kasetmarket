@@ -16,7 +16,7 @@ export function SiteFooter() {
     <footer className="mt-12 bg-primary-dk text-primary-foreground">
       <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-10 sm:flex-row sm:items-start sm:justify-between">
         <div className="max-w-sm">
-          <p className="font-heading text-lg font-bold">🌾 KasetMarket</p>
+          <p className="font-heading text-lg font-bold">🌾 TaladKaset</p>
           <p className="mt-2 text-sm leading-relaxed text-primary-foreground/80">
             ตลาดกลางซื้อขายสินค้าเกษตร ลงประกาศฟรี
             ผู้ซื้อติดต่อผู้ขายโดยตรงทางโทรศัพท์หรือ LINE
@@ -36,7 +36,7 @@ export function SiteFooter() {
       </div>
       <div className="border-t border-primary-foreground/15">
         <p className="mx-auto max-w-6xl px-4 py-4 text-xs text-primary-foreground/60">
-          © {new Date().getFullYear()} KasetMarket
+          © {new Date().getFullYear()} TaladKaset
         </p>
       </div>
     </footer>

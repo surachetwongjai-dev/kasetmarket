@@ -34,7 +34,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!seller) return { title: "ไม่พบผู้ขาย" };
   return {
     title: `${seller.name} — ประกาศขายสินค้าเกษตร`,
-    description: `ประกาศขายสินค้าเกษตรทั้งหมดจาก ${seller.name}${seller.province ? ` จังหวัด${seller.province}` : ""} บน KasetMarket`,
+    description: `ประกาศขายสินค้าเกษตรทั้งหมดจาก ${seller.name}${seller.province ? ` จังหวัด${seller.province}` : ""} บน TaladKaset`,
     alternates: { canonical: `/sellers/${id}` },
   };
 }

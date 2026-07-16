@@ -32,7 +32,7 @@ async function main() {
   const admin = await prisma.user.create({
     data: {
       role: "ADMIN",
-      name: "แอดมิน KasetMarket",
+      name: "แอดมิน TaladKaset",
       // login ทดสอบ (dev เท่านั้น): admin@kasetmarket.dev / admin1234
       email: "admin@kasetmarket.dev",
       passwordHash: bcrypt.hashSync("admin1234", 12),

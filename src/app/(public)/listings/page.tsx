@@ -14,7 +14,7 @@ import { ListingPagination } from "@/features/listings/components/listing-pagina
 import { getCategoryLabel } from "@/config/categories";
 
 export const metadata: Metadata = {
-  title: "ประกาศขายสินค้าเกษตร", // layout เติม "| KasetMarket" ให้
+  title: "ประกาศขายสินค้าเกษตร", // layout เติม "| TaladKaset" ให้
 
   description:
     "รวมประกาศขายสินค้าเกษตรทั่วไทย ข้าว ผัก ผลไม้ ปุ๋ย เครื่องจักร ที่ดิน ติดต่อผู้ขายตรง ไม่ผ่านคนกลาง",

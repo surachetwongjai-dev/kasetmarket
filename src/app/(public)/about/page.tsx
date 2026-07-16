@@ -4,7 +4,7 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "เกี่ยวกับเรา",
   description:
-    "KasetMarket ตลาดกลางซื้อขายสินค้าเกษตรออนไลน์ ให้เกษตรกรลงประกาศขายฟรี ผู้ซื้อติดต่อผู้ขายโดยตรง",
+    "TaladKaset ตลาดกลางซื้อขายสินค้าเกษตรออนไลน์ ให้เกษตรกรลงประกาศขายฟรี ผู้ซื้อติดต่อผู้ขายโดยตรง",
   alternates: { canonical: "/about" },
 };
 
@@ -12,11 +12,11 @@ export default function AboutPage() {
   return (
     <main className="mx-auto w-full max-w-2xl px-4 py-8">
       <h1 className="font-heading text-2xl font-bold text-primary-dk">
-        เกี่ยวกับ KasetMarket
+        เกี่ยวกับ TaladKaset
       </h1>
       <div className="article-prose mt-4">
         <p>
-          KasetMarket คือตลาดกลางซื้อขายสินค้าเกษตรออนไลน์
+          TaladKaset คือตลาดกลางซื้อขายสินค้าเกษตรออนไลน์
           ที่สร้างขึ้นเพื่อให้เกษตรกรและผู้ค้าสินค้าเกษตรทั่วประเทศ
           มีพื้นที่ลงประกาศขายผลผลิตของตัวเองได้ฟรี
           โดยผู้ซื้อสามารถติดต่อผู้ขายได้โดยตรงทางโทรศัพท์หรือ LINE

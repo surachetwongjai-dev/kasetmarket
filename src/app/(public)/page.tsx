@@ -35,7 +35,8 @@ import { SITE_NAME, SITE_URL, YOUTUBE_CHANNEL_URL } from "@/config/site";
 export const revalidate = 300;
 
 export const metadata: Metadata = {
-  title: "KasetMarket — ตลาดสินค้าเกษตร จากมือเกษตรกรถึงคุณ",
+  // absolute = ไม่ให้ template "%s | TaladKaset" ของ layout เติมชื่อแบรนด์ซ้ำท้าย title
+  title: { absolute: `${SITE_NAME} — ตลาดสินค้าเกษตร จากมือเกษตรกรถึงคุณ` },
   description:
     "ลงประกาศขายสินค้าเกษตรฟรี ข้าว ผัก ผลไม้ ปุ๋ย เครื่องจักร ที่ดิน ผู้ซื้อติดต่อผู้ขายโดยตรง พร้อมคลังบทความความรู้เกษตร",
   alternates: { canonical: "/" },
