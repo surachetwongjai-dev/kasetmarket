@@ -24,6 +24,12 @@ enum ListingStatus {
   REJECTED
 }
 
+// ประเภทประกาศ — แยกคนขาย/คนต้องการซื้อในประกาศเดียวกัน (config/listingTypes.ts)
+enum ListingType {
+  SELL // ประกาศขาย (ค่าเริ่มต้น — ประกาศเดิมทั้งหมดเป็นแบบนี้)
+  BUY  // ต้องการซื้อ/รับซื้อ
+}
+
 // B1: กระดานจับคู่ซื้อขาย (PLAN-PHASE2.md กลุ่ม B)
 enum MatchPostType {
   SUPPLY // เกษตรกรเสนอผลผลิต (ล่วงหน้าได้)
@@ -88,6 +94,7 @@ model Account {
 model Listing {
   id           String         @id @default(cuid())
   slug         String         @unique // SEO: /listings/ขายข้าวหอมมะลิ-สุรินทร์-x7f2
+  listingType  ListingType    @default(SELL) // ขาย | ต้องการซื้อ (config/listingTypes.ts)
   title        String
   description  String         @db.Text
   price        Decimal
@@ -114,6 +121,7 @@ model Listing {
 
   @@index([category, province, status])
   @@index([status, createdAt])
+  @@index([listingType, status, createdAt]) // filter ขาย/ต้องการซื้อ + เรียงใหม่สุด
 }
 
 // U1: โปรไฟล์เกษตรกร (ฟาร์ม/ไร่/ร้าน) — PLAN-PHASE2.md กลุ่ม U · 1 โปรไฟล์/user

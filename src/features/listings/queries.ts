@@ -39,6 +39,7 @@ function publicWhere(): Prisma.ListingWhereInput {
 
 export type PublicListingsParams = {
   q?: string;
+  listingType?: "SELL" | "BUY";
   category?: string;
   province?: string;
   minPrice?: number;
@@ -50,6 +51,7 @@ export type PublicListingsParams = {
 export async function getPublicListings(params: PublicListingsParams) {
   const {
     q,
+    listingType,
     category,
     province,
     minPrice,
@@ -60,6 +62,7 @@ export async function getPublicListings(params: PublicListingsParams) {
 
   const where: Prisma.ListingWhereInput = {
     ...publicWhere(),
+    ...(listingType ? { listingType } : {}),
     ...(category ? { category } : {}),
     ...(province ? { province } : {}),
     ...(minPrice !== undefined || maxPrice !== undefined

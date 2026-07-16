@@ -12,6 +12,7 @@ import {
 } from "@/features/listings/components/listing-filters";
 import { ListingPagination } from "@/features/listings/components/listing-pagination";
 import { getCategoryLabel } from "@/config/categories";
+import { isListingType, listingTypeMeta } from "@/config/listingTypes";
 
 export const metadata: Metadata = {
   title: "ประกาศขายสินค้าเกษตร", // layout เติม "| TaladKaset" ให้
@@ -37,6 +38,9 @@ export default async function ListingsPage({
 
   const query: PublicListingsParams = {
     q: params.q?.trim() || undefined,
+    listingType: isListingType(params.listingType)
+      ? params.listingType
+      : undefined,
     category: params.category || undefined,
     province: params.province || undefined,
     minPrice: toNumber(params.minPrice),
@@ -47,8 +51,12 @@ export default async function ListingsPage({
 
   const { items, total, page, totalPages } = await getPublicListings(query);
 
+  // หัวข้อหน้า: สะท้อนประเภทที่กรอง (ทั้งหมด / ประกาศขาย / ประกาศรับซื้อ)
+  const baseHeadline = query.listingType
+    ? `${listingTypeMeta(query.listingType).verb}สินค้าเกษตร`
+    : "ประกาศซื้อ-ขายสินค้าเกษตร";
   const headline = [
-    "ประกาศขายสินค้าเกษตร",
+    baseHeadline,
     query.category ? `หมวด${getCategoryLabel(query.category)}` : null,
     query.province ? `จ.${query.province}` : null,
     query.q ? `ค้นหา "${query.q}"` : null,

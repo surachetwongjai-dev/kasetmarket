@@ -2,9 +2,11 @@
 
 import { CATEGORIES } from "@/config/categories";
 import { PROVINCES, REGIONS } from "@/config/provinces";
+import { LISTING_TYPES } from "@/config/listingTypes";
 
 export type ListingSearchParams = {
   q?: string;
+  listingType?: string;
   category?: string;
   province?: string;
   minPrice?: string;
@@ -33,6 +35,20 @@ export function ListingFilters({ params }: { params: ListingSearchParams }) {
         aria-label="ค้นหาประกาศ"
         className={`${inputClass} col-span-2 sm:col-span-3 lg:col-span-2`}
       />
+
+      <select
+        name="listingType"
+        defaultValue={params.listingType ?? ""}
+        aria-label="ประเภทประกาศ ซื้อ/ขาย"
+        className={selectClass}
+      >
+        <option value="">ซื้อ + ขาย</option>
+        {LISTING_TYPES.map((t) => (
+          <option key={t.value} value={t.value}>
+            {t.icon} {t.label}
+          </option>
+        ))}
+      </select>
 
       <select
         name="category"

@@ -9,10 +9,17 @@ import { Label } from "@/components/ui/label";
 import { CATEGORIES } from "@/config/categories";
 import { UNITS } from "@/config/units";
 import { PROVINCES, REGIONS } from "@/config/provinces";
+import {
+  LISTING_TYPES,
+  listingTypeMeta,
+  type ListingTypeValue,
+} from "@/config/listingTypes";
+import { cn } from "@/lib/utils";
 import type { ListingFormState } from "../actions";
 import { ImageUploader, type UploadedImage } from "./image-uploader";
 
 export type ListingFormDefaults = {
+  listingType: ListingTypeValue;
   title: string;
   description: string;
   price: string;
@@ -44,9 +51,47 @@ export function ListingForm({
   const [images, setImages] = useState<UploadedImage[]>(
     defaults?.images ?? [],
   );
+  const [listingType, setListingType] = useState<ListingTypeValue>(
+    defaults?.listingType ?? "SELL",
+  );
+  const typeMeta = listingTypeMeta(listingType);
 
   return (
     <form action={formAction} className="flex flex-col gap-5">
+      {/* ประเภทประกาศ: ขาย / ต้องการซื้อ — สำคัญสุด อยู่บนสุด */}
+      <fieldset className="flex flex-col gap-2">
+        <legend className="mb-1.5 text-sm font-medium">ประเภทประกาศ</legend>
+        <input type="hidden" name="listingType" value={listingType} />
+        <div className="grid grid-cols-2 gap-2">
+          {LISTING_TYPES.map((t) => {
+            const active = t.value === listingType;
+            return (
+              <button
+                key={t.value}
+                type="button"
+                onClick={() => setListingType(t.value)}
+                aria-pressed={active}
+                className={cn(
+                  "flex min-h-16 flex-col items-center justify-center gap-0.5 rounded-xl border-2 px-3 py-2 text-center transition-colors",
+                  active
+                    ? "border-primary bg-primary/10"
+                    : "border-border bg-card hover:bg-muted",
+                )}
+              >
+                <span className="text-base font-semibold">
+                  <span aria-hidden>{t.icon} </span>
+                  {t.formLabel}
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  {t.formHint}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+        <FieldError messages={state.fieldErrors?.listingType} />
+      </fieldset>
+
       {/* รูปสินค้า */}
       <section className="flex flex-col gap-1.5">
         <Label>รูปสินค้า</Label>
@@ -63,7 +108,7 @@ export function ListingForm({
           required
           maxLength={100}
           defaultValue={defaults?.title}
-          placeholder="เช่น ขายข้าวหอมมะลิ 105 เกี่ยวใหม่"
+          placeholder={typeMeta.titlePlaceholder}
           className="h-11"
         />
         <FieldError messages={state.fieldErrors?.title} />
@@ -87,7 +132,7 @@ export function ListingForm({
       {/* ราคา + หน่วย */}
       <div className="grid grid-cols-2 gap-3">
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="price">ราคา (บาท)</Label>
+          <Label htmlFor="price">{typeMeta.priceLabel}</Label>
           <Input
             id="price"
             name="price"

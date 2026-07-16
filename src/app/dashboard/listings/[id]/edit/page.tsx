@@ -39,6 +39,7 @@ export default async function EditListingPage({
           action={action}
           submitLabel="บันทึกการแก้ไข"
           defaults={{
+            listingType: listing.listingType,
             title: listing.title,
             description: listing.description,
             price: String(listing.price),

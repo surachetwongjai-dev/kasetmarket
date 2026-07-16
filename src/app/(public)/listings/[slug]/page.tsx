@@ -9,6 +9,7 @@ import {
   getRelatedListings,
 } from "@/features/listings/queries";
 import { ListingCard } from "@/features/listings/components/listing-card";
+import { ListingTypeBadge } from "@/features/listings/components/listing-type-badge";
 import { ListingGallery } from "@/features/listings/components/listing-gallery";
 import { ContactButtons } from "@/features/listings/components/contact-buttons";
 import { PriceTag } from "@/features/listings/components/price-tag";
@@ -23,6 +24,7 @@ import { SHIPPING_BASE } from "@/features/shipping";
 import { FLAGS } from "@/config/flags";
 import { getCategoryLabel } from "@/config/categories";
 import { getUnitLabel } from "@/config/units";
+import { listingTypeMeta } from "@/config/listingTypes";
 import { formatPrice, formatThaiDate, formatTimeAgo } from "@/lib/format";
 
 type Props = { params: Promise<{ slug: string }> };
@@ -33,8 +35,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!listing) notFound();
 
   // title pattern §9: "ขาย{สินค้า} {จังหวัด} ราคา{ราคา} บาท/{หน่วย}"
-  const title = `${listing.title} ${listing.province} ราคา ${formatPrice(Number(listing.price))} บาท/${getUnitLabel(listing.unit)}`;
-  const description = listing.description.slice(0, 160);
+  // ประกาศรับซื้อขึ้นต้นด้วย "ต้องการซื้อ" เพื่อไม่ให้อ่านเหมือนประกาศขาย
+  const typeMeta = listingTypeMeta(listing.listingType);
+  const pricePart = `ราคา ${formatPrice(Number(listing.price))} บาท/${getUnitLabel(listing.unit)}`;
+  const title =
+    listing.listingType === "BUY"
+      ? `ต้องการซื้อ ${listing.title} ${listing.province} ${pricePart}`
+      : `${listing.title} ${listing.province} ${pricePart}`;
+  const description = `${typeMeta.verb} · ${listing.description.slice(0, 150)}`;
 
   return {
     title, // layout เติม "| TaladKaset" ให้จาก title.template
@@ -70,19 +78,30 @@ export default async function ListingDetailPage({ params }: Props) {
         : Promise.resolve(0),
     ]);
 
+  const typeMeta = listingTypeMeta(listing.listingType);
+
+  // SELL = Offer (ขาย/InStock) · BUY = seeks Demand (ประกาศต้องการซื้อ ไม่ใช่ของขาย)
+  // ไม่ปั้นประกาศรับซื้อให้เป็น Offer/InStock เพื่อไม่ให้ข้อมูล schema ผิดความจริง
+  const priceSpec = {
+    price: Number(listing.price),
+    priceCurrency: "THB",
+    areaServed: listing.province,
+  };
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Product",
     name: listing.title,
     description: listing.description,
     image: listing.images.map((img) => img.url),
-    offers: {
-      "@type": "Offer",
-      price: Number(listing.price),
-      priceCurrency: "THB",
-      availability: "https://schema.org/InStock",
-      areaServed: listing.province,
-    },
+    ...(listing.listingType === "BUY"
+      ? { seeks: { "@type": "Demand", ...priceSpec } }
+      : {
+          offers: {
+            "@type": "Offer",
+            availability: "https://schema.org/InStock",
+            ...priceSpec,
+          },
+        }),
   };
 
   return (
@@ -98,12 +117,15 @@ export default async function ListingDetailPage({ params }: Props) {
 
       {/* breadcrumb แบบง่าย */}
       <nav className="text-sm text-muted-foreground">
-        <Link href="/listings" className="hover:text-primary hover:underline">
-          ประกาศขาย
+        <Link
+          href={`/listings?listingType=${listing.listingType}`}
+          className="hover:text-primary hover:underline"
+        >
+          {typeMeta.verb}
         </Link>
         {" › "}
         <Link
-          href={`/listings?category=${listing.category}`}
+          href={`/listings?listingType=${listing.listingType}&category=${listing.category}`}
           className="hover:text-primary hover:underline"
         >
           {getCategoryLabel(listing.category)}
@@ -114,11 +136,18 @@ export default async function ListingDetailPage({ params }: Props) {
         <div>
           <ListingGallery images={listing.images} title={listing.title} />
 
-          <h1 className="mt-4 font-heading text-xl font-bold text-foreground sm:text-2xl">
+          <div className="mt-4">
+            <ListingTypeBadge type={listing.listingType} size="lg" />
+          </div>
+
+          <h1 className="mt-2 font-heading text-xl font-bold text-foreground sm:text-2xl">
             {listing.title}
           </h1>
 
           <div className="mt-2">
+            <p className="mb-1 text-sm font-medium text-muted-foreground">
+              {listing.listingType === "BUY" ? "ราคาที่รับซื้อ" : "ราคาขาย"}
+            </p>
             <PriceTag
               price={Number(listing.price)}
               unit={listing.unit}

@@ -16,6 +16,7 @@ export const listingImageSchema = z.object({
 
 export const listingSchema = z
   .object({
+    listingType: z.enum(["SELL", "BUY"], { message: "กรุณาเลือกประเภทประกาศ" }),
     title: z
       .string()
       .trim()
@@ -64,6 +65,7 @@ export function listingFormDataToObject(formData: FormData) {
     images = [];
   }
   return {
+    listingType: formData.get("listingType"),
     title: formData.get("title"),
     description: formData.get("description"),
     price: formData.get("price"),

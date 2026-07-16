@@ -8,6 +8,7 @@ import { auth } from "@/features/auth";
 import { getMyListings } from "@/features/listings/queries";
 import { ListingRowActions } from "@/features/listings/components/listing-row-actions";
 import { ListingStatusBadge } from "@/features/listings/components/listing-status-badge";
+import { ListingTypeBadge } from "@/features/listings/components/listing-type-badge";
 import { formatPricePerUnit, formatThaiDate, formatTimeAgo } from "@/lib/format";
 
 export const metadata: Metadata = {
@@ -85,9 +86,12 @@ export default async function MyListingsPage({
                     <p className="line-clamp-2 font-medium">{listing.title}</p>
                     <ListingStatusBadge status={listing.status} />
                   </div>
-                  <p className="mt-1 font-num text-lg font-bold text-accent-foreground">
-                    {formatPricePerUnit(Number(listing.price), listing.unit)}
-                  </p>
+                  <div className="mt-1 flex items-center gap-2">
+                    <ListingTypeBadge type={listing.listingType} size="sm" />
+                    <p className="font-num text-lg font-bold text-accent-foreground">
+                      {formatPricePerUnit(Number(listing.price), listing.unit)}
+                    </p>
+                  </div>
                   <p className="mt-0.5 text-xs text-muted-foreground">
                     {listing.province} · ลงเมื่อ {formatTimeAgo(listing.createdAt)} ·{" "}
                     {listing.views.toLocaleString("th-TH")} วิว · หมดอายุ{" "}
@@ -100,7 +104,11 @@ export default async function MyListingsPage({
                   เหตุผลที่ไม่ผ่าน: {listing.rejectReason} — แก้ไขประกาศแล้วระบบจะส่งเข้าคิวตรวจใหม่
                 </p>
               )}
-              <ListingRowActions id={listing.id} status={listing.status} />
+              <ListingRowActions
+                id={listing.id}
+                status={listing.status}
+                listingType={listing.listingType}
+              />
             </li>
           ))}
         </ul>

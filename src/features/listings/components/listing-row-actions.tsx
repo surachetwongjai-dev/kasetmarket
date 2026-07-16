@@ -4,7 +4,7 @@
 // ใช้ client component เพื่อ confirm ก่อนลบ/ปิดการขาย
 
 import Link from "next/link";
-import type { ListingStatus } from "@prisma/client";
+import type { ListingStatus, ListingType } from "@prisma/client";
 import {
   deleteListingAction,
   markSoldAction,
@@ -14,12 +14,21 @@ import {
 export function ListingRowActions({
   id,
   status,
+  listingType,
 }: {
   id: string;
   status: ListingStatus;
+  listingType: ListingType;
 }) {
   const btn =
     "flex h-10 items-center justify-center rounded-lg border border-border bg-background px-3 text-sm font-medium transition-colors hover:bg-muted";
+
+  // BUY: "ปิดประกาศ (ได้ของแล้ว)" · SELL: "ขายแล้ว" — action เดียวกัน (status → SOLD)
+  const closeLabel = listingType === "BUY" ? "ได้ของแล้ว" : "ขายแล้ว";
+  const closeConfirm =
+    listingType === "BUY"
+      ? "ปิดประกาศนี้ (ได้ของที่ต้องการแล้ว)?"
+      : "ปิดการขายประกาศนี้ (ขายแล้ว)?";
 
   return (
     <div className="flex flex-wrap gap-2">
@@ -31,12 +40,12 @@ export function ListingRowActions({
         <form
           action={markSoldAction}
           onSubmit={(e) => {
-            if (!confirm("ปิดการขายประกาศนี้ (ขายแล้ว)?")) e.preventDefault();
+            if (!confirm(closeConfirm)) e.preventDefault();
           }}
         >
           <input type="hidden" name="id" value={id} />
           <button type="submit" className={btn}>
-            ขายแล้ว
+            {closeLabel}
           </button>
         </form>
       )}

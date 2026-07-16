@@ -8,7 +8,8 @@
 - **โดเมนจริง:** taladkaset.com (ผู้ใช้แจ้ง 2026-07-12) — ตั้ง `NEXT_PUBLIC_SITE_URL=https://taladkaset.com` ตอน deploy
 - **แบรนด์:** **TaladKaset** ✅ (รีแบรนด์จาก "KasetMarket" แล้ว 2026-07-16) — ชื่อแบรนด์อยู่ที่ `SITE_NAME` ใน `config/site.ts` ที่เดียว, wordmark 2 สีอยู่ `site-header.tsx` + `opengraph-image.tsx` (`Talad` + `Kaset`) — **ห้าม hardcode ชื่อแบรนด์ในหน้าใหม่ ให้ import `SITE_NAME`**. ตัวระบุภายในยังเป็นชื่อเดิมโดยตั้งใจ: `package.json` name, bucket `kasetmarket-images`, login dev `admin@kasetmarket.dev`
 - **⚠️ ค้าง: ต้องรีแบรนด์ข้อมูลใน prod DB** — ชื่อแบรนด์เก่าถูกเก็บเป็น**ข้อมูล**ด้วย ไม่ใช่แค่ในโค้ด (ผู้ใช้แอดมินชื่อ "แอดมิน KasetMarket" → โชว์เป็นชื่อผู้ขายบนการ์ดประกาศทุกใบ). dev DB แก้แล้ว ✅ · **prod ต้องรันหลัง deploy:** `npx --yes dotenv-cli -e .env.production-db -- npx tsx scripts/rebrand-taladkaset.ts` (ใส่ `--dry` ดูก่อนได้ · รันซ้ำได้ ไม่มีผลข้างเคียง)
-- **อัปเดตล่าสุด:** 2026-07-14
+- **ประกาศ ซื้อ/ขาย (listingType) ✅ เสร็จ 2026-07-16:** ประกาศปกติมีประเภท SELL (ขาย, ค่าเริ่มต้น) / BUY (ต้องการซื้อ) ในประกาศเดียวกัน — ป้ายชัดบนการ์ด+หน้าประกาศ (เขียว "ขาย" / ทอง "ต้องการซื้อ" จาก `config/listingTypes.ts` ที่เดียว), ตัวเลือกในฟอร์มลงประกาศ (label ราคา/placeholder ปรับตามประเภท), ตัวกรองค้นหา `?listingType=SELL|BUY`, SEO title + JSON-LD แยก (BUY = `seeks/Demand` ไม่ใช่ Offer/InStock). **ไม่มี flag — เปิดใช้ทันที**. **⚠️ prod ต้องรัน migration ก่อน/หลัง deploy:** `npx --yes dotenv-cli -e .env.production-db -- npx prisma migrate deploy` (migration `add_listing_type` — additive, ประกาศเดิมทั้งหมดเป็น SELL อัตโนมัติ ไม่กระทบข้อมูล)
+- **อัปเดตล่าสุด:** 2026-07-16
 
 ---
 

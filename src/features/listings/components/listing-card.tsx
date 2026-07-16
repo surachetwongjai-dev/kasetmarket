@@ -6,6 +6,7 @@ import Image from "next/image";
 import type { Listing, ListingImage } from "@prisma/client";
 import { formatTimeAgo } from "@/lib/format";
 import { PriceTag } from "./price-tag";
+import { ListingTypeBadge } from "./listing-type-badge";
 
 export function ListingCard({
   listing,
@@ -31,8 +32,13 @@ export function ListingCard({
             ไม่มีรูป
           </div>
         )}
+        <ListingTypeBadge
+          type={listing.listingType}
+          size="sm"
+          className="absolute top-2 left-2 shadow-sm"
+        />
         {listing.featured && (
-          <span className="absolute top-2 left-2 rounded bg-accent px-1.5 py-0.5 text-xs font-semibold text-white">
+          <span className="absolute top-2 right-2 rounded bg-accent-gold px-1.5 py-0.5 text-xs font-semibold text-accent-gold-foreground shadow-sm">
             ประกาศเด่น
           </span>
         )}
